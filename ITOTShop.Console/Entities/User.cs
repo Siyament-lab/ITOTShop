@@ -14,5 +14,8 @@ namespace ITOTShop.Console.Entities
         public bool IsActrive { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        //Ser till att alla orders som är kopplade till en användare laddas in när användaren hämtas från databasen.
+        public ICollection<Order> Orders { get; set; } = new List<Order> ();
+
         }
     }

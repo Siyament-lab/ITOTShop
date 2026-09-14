@@ -9,6 +9,8 @@ namespace ITOTShop.Console.Entities
         {
         public int Id { get; set; }
         public int CustomerId { get; set; }
+        //Kopplar ordern till den kund som har lagt ordern
+        public User Customer { get; set; } = null!;
         public string ProductName { get; set; } = string.Empty;
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
