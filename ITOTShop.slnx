@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="ITOTShop.Console/ITOTShop.Console.csproj" Id="50fa95e3-fc3b-4b36-86b0-9b55351633ca" />
+  <Project Path="ITOTShop.Integration/ITOTShop.Integration.csproj" Id="1f00e944-7934-4459-867b-c6436d849d59" />
+  <Project Path="ITOTShop.OT/ITOTShop.OT.csproj" Id="622bde56-25b9-484a-9c0c-164b4e7f1ecf" />
+  <Project Path="ITOTShop.Web/ITOTShop.Web.csproj" Id="6f9a1d5b-92ab-41e6-804c-20e980fc11b1" />
+</Solution>
