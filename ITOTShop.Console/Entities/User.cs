@@ -16,6 +16,6 @@ namespace ITOTShop.Console.Entities
 
         //Ser till att alla orders som är kopplade till en användare laddas in när användaren hämtas från databasen.
         public ICollection<Order> Orders { get; set; } = new List<Order> ();
-
+        
         }
     }
