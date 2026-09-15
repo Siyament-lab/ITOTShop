@@ -14,7 +14,7 @@ namespace ITOTShop.OrderConsole.Menu
             }
 
         // Startar huvudmenyn för orderhanteringen
-        public async Task RunAsync ()
+        public async Task RunAsync (User currentUser)
             {
             bool running = true;
 
@@ -35,7 +35,7 @@ namespace ITOTShop.OrderConsole.Menu
                         break;
 
                     case "2":
-                        await CreateOrderAsync ();
+                        await CreateOrderAsync (currentUser);
                         break;
 
                     case "0":
@@ -73,7 +73,7 @@ namespace ITOTShop.OrderConsole.Menu
             }
 
         // Läser in orderdata från användaren och skapar en ny order
-        private async Task CreateOrderAsync ()
+        private async Task CreateOrderAsync (User currentUser)
             {
             string productName;
             //Do-while loop för att säkerställa att produktnamnet inte är tomt
@@ -112,8 +112,8 @@ namespace ITOTShop.OrderConsole.Menu
             var order = new Order
             
                 {
-                // Tillfälligt kundId tills login/users är klara att implementeras
-                CustomerId = 1,
+                // koppla ordern till den inloggade användaren.
+                CustomerId = currentUser.Id,
 
                 ProductName = productName ?? string.Empty,
                 Quantity = quantity,
