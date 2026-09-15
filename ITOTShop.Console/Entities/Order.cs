@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using ITOTShop.Console.Enums;
+﻿
+using ITOTShop.orderConsole.Enums;
 
-namespace ITOTShop.Console.Entities
+namespace ITOTShop.OrderConsole.Entities
     {
     public class Order
         {

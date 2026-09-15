@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace ITOTShop.Console.Migrations
+namespace ITOTShop.OrderConsole.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration

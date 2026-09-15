@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
-using ITOTShop.Console.Entities;
+using ITOTShop.OrderConsole.Entities;
 
-namespace ITOTShop.Console.Data
+namespace ITOTShop.OrderConsole.Data
     {
     public class AppDbContext : DbContext
         {

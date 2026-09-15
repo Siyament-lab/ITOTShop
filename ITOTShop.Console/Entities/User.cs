@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using ITOTShop.Console.Enums;
+using ITOTShop.OrderConsole.Enums;
 
-namespace ITOTShop.Console.Entities
+namespace ITOTShop.OrderConsole.Entities
     {
     public class User
         {
@@ -16,6 +16,6 @@ namespace ITOTShop.Console.Entities
 
         //Ser till att alla orders som är kopplade till en användare laddas in när användaren hämtas från databasen.
         public ICollection<Order> Orders { get; set; } = new List<Order> ();
-
+        
         }
     }

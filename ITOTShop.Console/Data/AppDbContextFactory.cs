@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 
-namespace ITOTShop.Console.Data
+namespace ITOTShop.OrderConsole.Data
     {
     // Används av EF Core när migrationer skapas.
     // Skapar AppDbContext utan att applikationen behöver startas.
