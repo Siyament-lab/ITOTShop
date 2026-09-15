@@ -1,8 +1,8 @@
-﻿using ITOTShop.Console.Entities;
-using ITOTShop.Console.Enums;
+﻿using ITOTShop.OrderConsole.Entities;
+using ITOTShop.OrderConsole.Enums;
 using Microsoft.EntityFrameworkCore;
 
-namespace ITOTShop.Console.Data
+namespace ITOTShop.OrderConsole.Data
     {
     public static class UserSeed
         {

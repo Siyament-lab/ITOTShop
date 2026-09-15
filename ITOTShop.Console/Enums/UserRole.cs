@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ITOTShop.Console.Enums
+namespace ITOTShop.OrderConsole.Enums
     {
     public enum UserRole
         {

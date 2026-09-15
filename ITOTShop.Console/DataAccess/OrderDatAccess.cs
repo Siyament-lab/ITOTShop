@@ -1,9 +1,9 @@
-﻿using ITOTShop.Console.Data;
-using ITOTShop.Console.Entities;
-using ITOTShop.Console.Interfaces;
+﻿using ITOTShop.OrderConsole.Data;
+using ITOTShop.OrderConsole.Entities;
+using ITOTShop.OrderConsole.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace ITOTShop.Console.DataAccess
+namespace ITOTShop.OrderConsole.DataAccess
     {
     public class OrderDataAccess: IOrderDataAccess
         {

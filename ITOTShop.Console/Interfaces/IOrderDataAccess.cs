@@ -1,9 +1,9 @@
-﻿using ITOTShop.Console.Entities;
+﻿using ITOTShop.OrderConsole.Entities;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ITOTShop.Console.Interfaces
+namespace ITOTShop.OrderConsole.Interfaces
     {
     public interface IOrderDataAccess
         {

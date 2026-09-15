@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using ITOTShop.Console.Enums;
+using ITOTShop.OrderConsole.Enums;
 
-namespace ITOTShop.Console.Entities
+namespace ITOTShop.OrderConsole.Entities
     {
     public class User
         {

@@ -1,14 +1,14 @@
-﻿using ITOTShop.Console.Data;
+﻿using ITOTShop.OrderConsole.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using ITOTShop.Console.Interfaces;
-using ITOTShop.Console.DataAccess;
-using ITOTShop.Console.Services;
-using ITOTShop.Console.Menu;
+using ITOTShop.OrderConsole.Interfaces;
+using ITOTShop.OrderConsole.DataAccess;
+using ITOTShop.OrderConsole.Services;
+using ITOTShop.OrderConsole.Menu;
 
-namespace ITOTShop.Console
+namespace ITOTShop.OrderConsole
     {
     internal class Program
         {

@@ -1,7 +1,7 @@
-﻿using ITOTShop.Console.Entities;
-using ITOTShop.Console.Services;
+﻿using ITOTShop.OrderConsole.Entities;
+using ITOTShop.OrderConsole.Services;
 
-namespace ITOTShop.Console.Menu
+namespace ITOTShop.OrderConsole.Menu
     {
     public class OrderMenu
         {
@@ -20,13 +20,13 @@ namespace ITOTShop.Console.Menu
 
             while (running)
                 {
-                System.Console.WriteLine ("\n--- ITOTShop Order Management ---");
-                System.Console.WriteLine ("1. List orders");
-                System.Console.WriteLine ("2. Create order");
-                System.Console.WriteLine ("0. Exit");
-                System.Console.Write ("Choose option: ");
+                Console.WriteLine ("\n--- ITOTShop Order Management ---");
+                Console.WriteLine ("1. List orders");
+                Console.WriteLine ("2. Create order");
+                Console.WriteLine ("0. Exit");
+                Console.Write ("Choose option: ");
 
-                var choice = System.Console.ReadLine ();
+                var choice = Console.ReadLine ();
 
                 switch (choice)
                     {
@@ -43,7 +43,7 @@ namespace ITOTShop.Console.Menu
                         break;
 
                     default:
-                        System.Console.WriteLine ("Invalid option.");
+                        Console.WriteLine ("Invalid option.");
                         break;
                     }
                 }
@@ -56,7 +56,7 @@ namespace ITOTShop.Console.Menu
 
             foreach (var order in orders)
                 {
-                System.Console.WriteLine (
+                Console.WriteLine (
                     $"Id: {order.Id}, " +
                     $"Product: {order.ProductName}, " +
                     $"Quantity: {order.Quantity}, " +
@@ -69,14 +69,26 @@ namespace ITOTShop.Console.Menu
         // Läser in orderdata från användaren och skapar en ny order
         private async Task CreateOrderAsync ()
             {
-            System.Console.Write ("Product name: ");
-            var productName = System.Console.ReadLine ();
+            Console.Write ("Product name: ");
+            var productName = Console.ReadLine ();
 
-            System.Console.Write ("Quantity: ");
-            int quantity = int.Parse (System.Console.ReadLine ()!);
+            Console.Write ("Quantity: ");
+            // Läser in kvantitet och kontrollerar att det är ett giltigt heltal
+            if (!int.TryParse(Console.ReadLine(), out int quantity))
+                {
+                Console.WriteLine ("Invalid value, please enter a valid integer!");
+                return;
+                }
+            
 
-            System.Console.Write ("Unit price: ");
-            decimal unitPrice = decimal.Parse (System.Console.ReadLine ()!);
+            Console.Write ("Unit price: ");
+            //KOnverterar inmatning till decimal
+            if(!decimal.TryParse(Console.ReadLine (), out decimal unitPrice))
+                {
+                Console.WriteLine ("Invalid value, please enter a valid decimal number!");
+                return;
+                }
+           
 
             var order = new Order
                 {
@@ -87,10 +99,18 @@ namespace ITOTShop.Console.Menu
                 Quantity = quantity,
                 UnitPrice = unitPrice
                 };
+            //Förhindrar krasch av program vid fel inmatningar och ger användaren feedback om vad som gick fel,
+            //feedback hämtas från OrderService som kastar ArgumentException vid felaktiga inmatningar.
+            try
+                {
+                await _orderService.CreateOrderAsync (order);
+                Console.WriteLine ("Order successfully created.");
+                }
+            catch(ArgumentException ex)
+                {
+                Console.WriteLine ($"Error creating order: {ex.Message}");
+                }
 
-            await _orderService.CreateOrderAsync (order);
-
-            System.Console.WriteLine ("Order created.");
             }
         }
     }

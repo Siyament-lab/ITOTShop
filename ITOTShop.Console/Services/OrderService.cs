@@ -1,7 +1,8 @@
-﻿using ITOTShop.Console.Entities;
-using ITOTShop.Console.Interfaces;
+﻿
+using ITOTShop.OrderConsole.Entities;
+using ITOTShop.OrderConsole.Interfaces;
 
-namespace ITOTShop.Console.Services
+namespace ITOTShop.OrderConsole.Services
     {
     public class OrderService
         {
