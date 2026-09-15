@@ -54,6 +54,12 @@ namespace ITOTShop.OrderConsole.Menu
             {
             var orders = await _orderService.GetAllOrdersAsync ();
 
+            //KOntrollerar om det finns några ordrar att visa, annars skrivs ett meddelande ut
+            if(orders.Count == 0)
+                { Console.WriteLine ("No orders found.");
+                return;
+                }
+
             foreach (var order in orders)
                 {
                 Console.WriteLine (
@@ -62,35 +68,49 @@ namespace ITOTShop.OrderConsole.Menu
                     $"Quantity: {order.Quantity}, " +
                     $"Unit price: {order.UnitPrice}, " +
                     $"Status: {order.Status}, " +
-                    $"Created: {order.CreatedAt:yyyy-MM-dd-HH:mm}");
+                    $"Created: {order.CreatedAt:yyyy-MM-dd HH:mm}");
                 }
             }
 
         // Läser in orderdata från användaren och skapar en ny order
         private async Task CreateOrderAsync ()
             {
-            Console.Write ("Product name: ");
-            var productName = Console.ReadLine ();
+            string productName;
+            //Do-while loop för att säkerställa att produktnamnet inte är tomt
+            do
+                {
+                Console.Write ("Product name: ");
+                productName = Console.ReadLine () ?? string.Empty;
+                if(string.IsNullOrWhiteSpace (productName))
+                    {
+                    Console.WriteLine ("Product name cannot be empty. Try again!");
+                    }
+                }
+            while (string.IsNullOrWhiteSpace (productName));
 
             Console.Write ("Quantity: ");
+           int quantity;
             // Läser in kvantitet och kontrollerar att det är ett giltigt heltal
-            if (!int.TryParse(Console.ReadLine(), out int quantity))
+
+            while (!int.TryParse(Console.ReadLine(), out quantity) || quantity <= 0)
                 {
-                Console.WriteLine ("Invalid value, please enter a valid integer!");
-                return;
+                Console.WriteLine ("Invalid value, please enter a greater than 0:");
                 }
+            
             
 
             Console.Write ("Unit price: ");
-            //KOnverterar inmatning till decimal
-            if(!decimal.TryParse(Console.ReadLine (), out decimal unitPrice))
+            decimal unitPrice;
+            //Konverterar inmatning till decimal
+            while (!decimal.TryParse(Console.ReadLine (), out unitPrice) || unitPrice <= 0)
                 {
-                Console.WriteLine ("Invalid value, please enter a valid decimal number!");
-                return;
+                Console.WriteLine ("Invalid value, please enter a price greater than 0:");
+                
                 }
            
 
             var order = new Order
+            
                 {
                 // Tillfälligt kundId tills login/users är klara att implementeras
                 CustomerId = 1,
