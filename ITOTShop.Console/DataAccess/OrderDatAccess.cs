@@ -14,11 +14,18 @@ namespace ITOTShop.OrderConsole.DataAccess
             {
             _context = context;
             }
-
-        // Hämtar samtliga ordrar från Orders-tabellen
+        //Hämtar alla ordrar från databasen
         public async Task<List<Order>> GetAllAsync ()
             {
             return await _context.Orders.ToListAsync ();
+            }
+
+        // Hämtar ordrar tillhörande specifik kund baserat på kundens ID
+        public async Task<List<Order>> GetByCustomerIdAsync ( int customerId )
+            {
+            return await _context.Orders
+                .Where (o => o.CustomerId == customerId)
+                .ToListAsync ();
             }
 
         // Lägger till en order och sparar ändringen i databasen

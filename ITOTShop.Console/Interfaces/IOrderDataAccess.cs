@@ -10,7 +10,11 @@ namespace ITOTShop.OrderConsole.Interfaces
         //Hämta alla ordrar från db
         Task<List<Order>> GetAllAsync ();
 
+        //Hämta order med specifikt kundId från db
+        Task<List<Order>> GetByCustomerIdAsync ( int customerId );
+
         //Lägger till ny order i db
         Task AddAsync ( Order order );
+        
         }
     }

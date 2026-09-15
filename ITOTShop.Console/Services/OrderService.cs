@@ -14,7 +14,12 @@ namespace ITOTShop.OrderConsole.Services
             _orderDataAccess = orderDataAccess;
             }
 
-        // Hämtar alla ordrar via DataAccess-lagret
+        // Hämtar ordrar som tillhör en specifik kund baserat på kundens ID
+        public async Task<List<Order>> GetOrdersByCustomerIdAsync ( int customerId )
+            {
+            return await _orderDataAccess.GetByCustomerIdAsync (customerId);
+            }
+        //Hämtar alla ordrar från databasen
         public async Task<List<Order>> GetAllOrdersAsync ()
             {
             return await _orderDataAccess.GetAllAsync ();

@@ -14,7 +14,7 @@ namespace ITOTShop.OrderConsole.Menu
             }
 
         // Startar huvudmenyn för orderhanteringen
-        public async Task RunAsync ()
+        public async Task RunAsync (User currentUser)
             {
             bool running = true;
 
@@ -23,7 +23,7 @@ namespace ITOTShop.OrderConsole.Menu
                 Console.WriteLine ("\n--- ITOTShop Order Management ---");
                 Console.WriteLine ("1. List orders");
                 Console.WriteLine ("2. Create order");
-                Console.WriteLine ("0. Exit");
+                Console.WriteLine ("0. Logout");
                 Console.Write ("Choose option: ");
 
                 var choice = Console.ReadLine ();
@@ -31,11 +31,11 @@ namespace ITOTShop.OrderConsole.Menu
                 switch (choice)
                     {
                     case "1":
-                        await ListOrdersAsync ();
+                        await ListOrdersAsync (currentUser);
                         break;
 
                     case "2":
-                        await CreateOrderAsync ();
+                        await CreateOrderAsync (currentUser);
                         break;
 
                     case "0":
@@ -50,9 +50,9 @@ namespace ITOTShop.OrderConsole.Menu
             }
 
         // Hämtar och skriver ut alla ordrar från databasen
-        private async Task ListOrdersAsync ()
+        private async Task ListOrdersAsync (User currentUser)
             {
-            var orders = await _orderService.GetAllOrdersAsync ();
+            var orders = await _orderService.GetOrdersByCustomerIdAsync (currentUser.Id);
 
             //KOntrollerar om det finns några ordrar att visa, annars skrivs ett meddelande ut
             if(orders.Count == 0)
@@ -73,7 +73,7 @@ namespace ITOTShop.OrderConsole.Menu
             }
 
         // Läser in orderdata från användaren och skapar en ny order
-        private async Task CreateOrderAsync ()
+        private async Task CreateOrderAsync (User currentUser)
             {
             string productName;
             //Do-while loop för att säkerställa att produktnamnet inte är tomt
@@ -112,8 +112,8 @@ namespace ITOTShop.OrderConsole.Menu
             var order = new Order
             
                 {
-                // Tillfälligt kundId tills login/users är klara att implementeras
-                CustomerId = 1,
+                // koppla ordern till den inloggade användaren.
+                CustomerId = currentUser.Id,
 
                 ProductName = productName ?? string.Empty,
                 Quantity = quantity,
