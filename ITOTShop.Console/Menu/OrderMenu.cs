@@ -23,7 +23,7 @@ namespace ITOTShop.OrderConsole.Menu
                 Console.WriteLine ("\n--- ITOTShop Order Management ---");
                 Console.WriteLine ("1. List orders");
                 Console.WriteLine ("2. Create order");
-                Console.WriteLine ("0. Exit");
+                Console.WriteLine ("0. Logout");
                 Console.Write ("Choose option: ");
 
                 var choice = Console.ReadLine ();
@@ -31,7 +31,7 @@ namespace ITOTShop.OrderConsole.Menu
                 switch (choice)
                     {
                     case "1":
-                        await ListOrdersAsync ();
+                        await ListOrdersAsync (currentUser);
                         break;
 
                     case "2":
@@ -50,9 +50,9 @@ namespace ITOTShop.OrderConsole.Menu
             }
 
         // Hämtar och skriver ut alla ordrar från databasen
-        private async Task ListOrdersAsync ()
+        private async Task ListOrdersAsync (User currentUser)
             {
-            var orders = await _orderService.GetAllOrdersAsync ();
+            var orders = await _orderService.GetOrdersByCustomerIdAsync (currentUser.Id);
 
             //KOntrollerar om det finns några ordrar att visa, annars skrivs ett meddelande ut
             if(orders.Count == 0)

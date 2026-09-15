@@ -24,6 +24,11 @@ namespace ITOTShop.OrderConsole.Services
             {
             return await _userDataAccess.UsernameExistsAsync (username);
             }
+        //Hämta alla användare
+        public async Task<List<User>> GetAllUsersAsync ()
+            {
+            return await _userDataAccess.GetAllAsync ();
+            }
 
         // Skapar en ny användare med hashat lösenord
         public async Task<User> RegisterAsync (

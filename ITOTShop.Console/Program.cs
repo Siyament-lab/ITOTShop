@@ -33,9 +33,10 @@ namespace ITOTShop.OrderConsole
 
             // Registrerar OrderService så att den kan hämtas via DI.
             builder.Services.AddScoped<OrderService> ();
-            
+
             // Registrerar OrderMenu så att den kan hämtas .
             builder.Services.AddScoped<OrderMenu> ();
+
             //====================Registrerar användarhantering==================================
             // Registrerar DataAccess för användarhantering
             builder.Services.AddScoped<IUserDataAccess, UserDataAccess> ();
@@ -49,31 +50,52 @@ namespace ITOTShop.OrderConsole
             // Registrerar AuthMenu så att den kan hämtas via DI
             builder.Services.AddScoped<AuthMenu> ();
 
+            //Registrerar menyn som hanterar roller och användare
+            builder.Services.AddScoped<RoleMenu> ();
+
+            //Reigstrerar AdminMenu så att den kan hämtas via DI
+            builder.Services.AddScoped<AdminMenu> ();
+
             // =====================Bygger applikationen==================================
             var app = builder.Build ();
 
             // Skapar ett scope för tjänster som använder AddScoped
             using var scope = app.Services.CreateScope ();
 
+            // Hämtar databaskontexten från DI
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext> ();
+
+            // Hämtar tjänsten som används för lösenordshashning
+            var passwordHasher =
+                scope.ServiceProvider.GetRequiredService<IPasswordHasher<User>> ();
+
+            // Skapar en admin om ingen admin redan finns
+            await AdminSeed.SeedAsync (dbContext, passwordHasher);
+
             // Hämtar autentiseringsmenyn
             var authMenu = scope.ServiceProvider.GetRequiredService<AuthMenu> ();
 
-            // Startar login och hämtar den inloggade användaren
-            var currentUser = await authMenu.LoginAsync ();
+            // Hämtar rollmenyn
+            var roleMenu = scope.ServiceProvider.GetRequiredService<RoleMenu> ();
 
-            // Avslutar programmet om användaren avbryter inloggningen
-            if (currentUser == null)
+            // Håller programmet igång tills användaren väljer att avsluta
+            while (true)
                 {
-                Console.WriteLine ("Login cancelled.");
-                return;
+                // Startar login och hämtar den inloggade användaren
+                var currentUser = await authMenu.RunAsync ();
+
+                // Avslutar hela programmet om användaren väljer Exit
+                if (currentUser == null)
+                    {
+                    Console.WriteLine ("Application closed.");
+                    break;
+                    }
+
+                // Startar rätt meny beroende på användarens roll.
+                // När användaren loggar ut kommer programmet tillbaka hit.
+                await roleMenu.RunAsync (currentUser);
+
                 }
-
-            // Hämtar ordermenyn
-            var orderMenu = scope.ServiceProvider.GetRequiredService<OrderMenu> ();
-
-            // Startar ordermenyn med den inloggade användaren
-            await orderMenu.RunAsync (currentUser);
-
             }
         }
     }

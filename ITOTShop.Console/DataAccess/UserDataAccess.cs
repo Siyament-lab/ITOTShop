@@ -14,6 +14,11 @@ namespace ITOTShop.OrderConsole.DataAccess
             {
             _context = context;
             }
+        // Hämtar alla användare från databasen
+        public async Task<List<User>> GetAllAsync ()
+            {
+            return await _context.Users.ToListAsync ();
+            }
 
         // Hämtar användaren som matchar angivet användarnamn
         public async Task<User?> GetByUsernameAsync ( string username )
