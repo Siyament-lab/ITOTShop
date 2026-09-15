@@ -1,4 +1,5 @@
 ﻿using ITOTShop.OrderConsole.Services;
+using ITOTShop.OrderConsole.Helpers;
 
 namespace ITOTShop.OrderConsole.Menu
     {
@@ -26,6 +27,7 @@ namespace ITOTShop.OrderConsole.Menu
                 Console.WriteLine ("\n--- Admin Menu ---");
                 Console.WriteLine ("1. List all orders");
                 Console.WriteLine ("2. List users");
+                Console.WriteLine ("3. Reset user password");
                 Console.WriteLine ("0. Exit");
                 Console.Write ("Choose option: ");
 
@@ -40,7 +42,9 @@ namespace ITOTShop.OrderConsole.Menu
                     case "2":
                         await ListUsersAsync ();
                         break;
-
+                    case "3":
+                        await ResetPasswordAsync ();
+                        break;
                     case "0":
                         running = false;
                         break;
@@ -87,6 +91,36 @@ namespace ITOTShop.OrderConsole.Menu
                     $"Username: {user.Username}, " +
                     $"Role: {user.Role}, " +
                     $"Created: {user.CreatedAt:yyyy-MM-dd HH:mm}");
+                }
+            }
+        // Låter admin återställa lösenordet för en användare
+        private async Task ResetPasswordAsync ()
+            {
+            Console.Write ("Username: ");
+            var username = Console.ReadLine () ?? string.Empty;
+
+            Console.Write ("New password: ");
+            var newPassword = SensitiveInput.ReadPassword ();
+
+            Console.Write ("Confirm password: ");
+            var confirmPassword = SensitiveInput.ReadPassword ();
+
+            // Kontrollerar att båda lösenorden är samma
+            if (newPassword != confirmPassword)
+                {
+                Console.WriteLine ("Passwords do not match.");
+                return;
+                }
+
+            try
+                {
+                await _authService.ResetPasswordAsync (username, newPassword);
+
+                Console.WriteLine ("Password successfully reset.");
+                }
+            catch (ArgumentException ex)
+                {
+                Console.WriteLine ($"Could not reset password: {ex.Message}");
                 }
             }
         }

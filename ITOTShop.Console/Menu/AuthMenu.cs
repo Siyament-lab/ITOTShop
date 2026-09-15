@@ -1,6 +1,7 @@
 ﻿using ITOTShop.OrderConsole.Entities;
 using ITOTShop.OrderConsole.Enums;
 using ITOTShop.OrderConsole.Services;
+using ITOTShop.OrderConsole.Helpers;
 
 namespace ITOTShop.OrderConsole.Menu
     {
@@ -96,7 +97,7 @@ namespace ITOTShop.OrderConsole.Menu
                 var username = Console.ReadLine () ?? string.Empty;
 
                 Console.Write ("Password: ");
-                var password = ReadPassword ();
+                var password = SensitiveInput.ReadPassword ();
 
                 // Kontrollerar användarnamn och lösenord
                 var user = await _authService.LoginAsync (username, password);
@@ -127,7 +128,7 @@ namespace ITOTShop.OrderConsole.Menu
             var username = Console.ReadLine () ?? string.Empty;
 
             Console.Write ("Password: ");
-            var password = ReadPassword ();
+            var password = SensitiveInput.ReadPassword ();
 
             try
                 {
@@ -146,39 +147,6 @@ namespace ITOTShop.OrderConsole.Menu
                 Console.WriteLine ($"Could not create customer: {ex.Message}");
                 return null;
                 }
-            }
-
-        // Läser lösenordet utan att visa de riktiga tecknen i konsolen
-        private string ReadPassword ()
-            {
-            string password = string.Empty;
-
-            while (true)
-                {
-                var key = Console.ReadKey (intercept: true);
-
-                if (key.Key == ConsoleKey.Enter)
-                    {
-                    Console.WriteLine ();
-                    break;
-                    }
-
-                if (key.Key == ConsoleKey.Backspace)
-                    {
-                    if (password.Length > 0)
-                        {
-                        password = password[..^1];
-                        Console.Write ("\b \b");
-                        }
-
-                    continue;
-                    }
-
-                password += key.KeyChar;
-                Console.Write ("*");
-                }
-
-            return password;
             }
         }
     }

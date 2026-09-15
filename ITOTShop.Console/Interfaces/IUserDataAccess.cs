@@ -18,6 +18,9 @@ namespace ITOTShop.OrderConsole.Interfaces
 
         //Kontroll om användarnamn finns
         Task<bool> UsernameExistsAsync(string username );
-       
+
+        //Uppdaterar anv. och sparar ändringen i databasen
+        Task UpdateAsync ( User user );
+
         }
     }

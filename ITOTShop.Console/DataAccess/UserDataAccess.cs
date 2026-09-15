@@ -19,6 +19,12 @@ namespace ITOTShop.OrderConsole.DataAccess
             {
             return await _context.Users.ToListAsync ();
             }
+        //Uppdaterar en befintlig användare och sparar ändringen i databasen
+        public async Task UpdateAsync ( User user )
+            {
+            _context.Users.Update (user);
+            await _context.SaveChangesAsync ();
+            }
 
         // Hämtar användaren som matchar angivet användarnamn
         public async Task<User?> GetByUsernameAsync ( string username )

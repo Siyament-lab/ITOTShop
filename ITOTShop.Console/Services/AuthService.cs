@@ -29,6 +29,30 @@ namespace ITOTShop.OrderConsole.Services
             {
             return await _userDataAccess.GetAllAsync ();
             }
+        // Återställer lösenordet för en befintlig användare
+        public async Task ResetPasswordAsync ( string username, string newPassword )
+            {
+            // Hämtar användaren från databasen
+            var user = await _userDataAccess.GetByUsernameAsync (username);
+
+            if (user == null)
+                {
+                throw new ArgumentException ("User does not exist.");
+                }
+
+            // Kontrollerar att det nya lösenordet inte är tomt
+            if (string.IsNullOrWhiteSpace (newPassword))
+                {
+                throw new ArgumentException ("Password is required.");
+                }
+
+            // Skapar en ny hash från det nya lösenordet
+            user.PasswordHash =
+                _passwordHasher.HashPassword (user, newPassword);
+
+            // Sparar den nya hashen i databasen
+            await _userDataAccess.UpdateAsync (user);
+            }
 
         // Skapar en ny användare med hashat lösenord
         public async Task<User> RegisterAsync (
