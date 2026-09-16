@@ -1,3 +1,4 @@
+using ITOTShop.Integration.DTOs;
 using ITOTShop.Integration.Enums;
 using ITOTShop.Integration.Interfaces;
 using ITOTShop.Integration.Models;
@@ -9,6 +10,7 @@ namespace ITOTShop.Integration
         {
         private readonly ILogger<Worker> _logger;
         private readonly IServiceScopeFactory _scopeFactory;
+
 
         public Worker (
             ILogger<Worker> logger,
@@ -31,22 +33,24 @@ namespace ITOTShop.Integration
                 {
                 try
                     {
-                    // Skapar ett nytt scope eftersom DbContext är Scoped
+                    // Skapar ett nytt scope eftersom DbContext är Scoped.
                     using var scope =
                         _scopeFactory.CreateScope ();
 
-                    // Hämtar DataAccess för orderdatabasen
+
+                    // Hämtar DataAccess för orderdatabasen.
                     var orderDataAccess =
                         scope.ServiceProvider
                             .GetRequiredService<IOrderDataAccess> ();
 
-                    // Hämtar ModbusService för kommunikationen med OpenPLC
+
+                    // Hämtar ModbusService för kommunikationen med OpenPLC.
                     var modbusService =
                         scope.ServiceProvider
                             .GetRequiredService<ModbusService> ();
 
 
-                    // Hämtar endast EN Pending-order åt gången
+                    // Hämtar endast EN Pending-order åt gången.
                     var order =
                         await orderDataAccess
                             .GetNextPendingOrderAsync (
@@ -54,7 +58,7 @@ namespace ITOTShop.Integration
 
 
                     // Om ingen Pending-order finns väntar Worker
-                    // innan databasen kontrolleras igen
+                    // innan databasen kontrolleras igen.
                     if (order == null)
                         {
                         _logger.LogInformation (
@@ -68,7 +72,7 @@ namespace ITOTShop.Integration
                         }
 
 
-                    // Behandlar hela ordern innan nästa order får hämtas
+                    // Behandlar hela ordern innan nästa order får hämtas.
                     await ProcessOrderAsync (
                         order,
                         orderDataAccess,
@@ -78,7 +82,7 @@ namespace ITOTShop.Integration
                 catch (OperationCanceledException)
                     when (stoppingToken.IsCancellationRequested)
                     {
-                    // Programmet håller på att stoppas normalt
+                    // Programmet håller på att stoppas normalt.
                     _logger.LogInformation (
                         "Integration service stopping.");
 
@@ -86,23 +90,35 @@ namespace ITOTShop.Integration
                     }
                 catch (Exception ex)
                     {
-                    // Ett vanligt fel ska inte stoppa hela integrationsprogrammet
+                    // Ett oväntat fel ska inte stoppa hela integrationsprogrammet.
+                    // Endast själva felmeddelandet loggas för tydligare konsol.
                     _logger.LogError (
-                        ex,
-                        "An error occurred while processing an order.");
+                        "Integration error: {ErrorMessage}",
+                        ex.Message);
 
-                    // Väntar innan ett nytt försök görs
-                    await Task.Delay (
-                        TimeSpan.FromSeconds (5),
-                        stoppingToken);
+
+                    // Väntar innan ett nytt försök görs.
+                    try
+                        {
+                        await Task.Delay (
+                            TimeSpan.FromSeconds (5),
+                            stoppingToken);
+                        }
+                    catch (OperationCanceledException)
+                        when (stoppingToken.IsCancellationRequested)
+                        {
+                        break;
+                        }
                     }
                 }
             }
 
 
         // Behandlar en order från att den hämtas från SQL
-        // tills produktionen blir Completed eller Fault.
-        // Nästa order hämtas först när denna order är färdig.
+        // tills PLC:n rapporterar Completed eller ett riktigt Fault.
+        //
+        // Kommunikationsproblem gör INTE ordern Failed.
+        // Integration väntar i stället tills PLC:n fungerar igen.
         private async Task ProcessOrderAsync (
             IntegrateOrder order,
             IOrderDataAccess orderDataAccess,
@@ -116,14 +132,17 @@ namespace ITOTShop.Integration
                 order.Quantity);
 
 
-            // Skickar OrderId och Quantity till OpenPLC
-            await modbusService.SendOrderAsync (
-                (ushort) order.Id,
-                (ushort) order.Quantity);
+            // Försöker skicka ordern till PLC:n.
+            // Om PLC:n är offline ligger ordern kvar som Pending
+            // och samma order försöks igen tills kommunikationen fungerar.
+            await SendOrderToPlcUntilSuccessAsync (
+                order,
+                modbusService,
+                stoppingToken);
 
 
-            // SQL-status ändras till Processing
-            // efter att ordern har skickats till PLC:n
+            // SQL-status ändras till Processing först när
+            // ordern faktiskt har skickats till PLC:n.
             await orderDataAccess.UpdateStatusAsync (
                 order.Id,
                 OrderStatus.Processing,
@@ -135,19 +154,118 @@ namespace ITOTShop.Integration
                 order.Id);
 
 
-            // Väntar här tills PLC:n säger Completed eller Fault
+            // Räknar kommunikationsfel under pågående produktion.
+            int plcReadFailures = 0;
+
+
+            // Används för att veta om PLC-kommunikationen
+            // tidigare har varit nere under denna order.
+            bool communicationWasLost = false;
+
+
+            // Används endast för varningsloggning.
+            // Ordern blir INTE Failed om produktionen tar lång tid.
+            var nextLongRunningWarning =
+                DateTime.UtcNow.AddSeconds (30);
+
+
+            // Väntar på samma order tills PLC:n rapporterar
+            // Completed eller ett riktigt produktionsfel.
             while (!stoppingToken.IsCancellationRequested)
                 {
-                // Läser aktuell produktionsstatus från OpenPLC
-                var productionState =
-                    modbusService.ReadProductionState ();
+                ProductionStateDto productionState;
 
 
-                // Kontrollerar om produktionen är färdig
+                try
+                    {
+                    // Läser aktuell produktionsstatus från OpenPLC.
+                    productionState =
+                        modbusService.ReadProductionState ();
+
+
+                    // Om vi tidigare tappade kontakten men nu lyckas läsa igen
+                    // har kommunikationen återställts.
+                    if (communicationWasLost)
+                        {
+                        _logger.LogInformation (
+                            "PLC communication restored for Order {OrderId}.",
+                            order.Id);
+                        }
+
+
+                    // Kommunikationsräknaren återställs
+                    // efter en lyckad läsning.
+                    plcReadFailures = 0;
+                    }
+                catch (OperationCanceledException)
+                    when (stoppingToken.IsCancellationRequested)
+                    {
+                    // Programmet håller på att stoppas normalt.
+                    throw;
+                    }
+                catch (Exception ex)
+                    {
+                    plcReadFailures++;
+                    communicationWasLost = true;
+
+
+                    // Ordern är fortfarande Processing.
+                    // Kommunikationsproblem ska inte markera produktionen som Failed.
+                    _logger.LogWarning (
+                        "PLC communication unavailable for Order {OrderId}. Retry {Attempt}. Error: {ErrorMessage}",
+                        order.Id,
+                        plcReadFailures,
+                        ex.Message);
+
+
+                    // Väntar innan samma PLC-status försöks läsas igen.
+                    await Task.Delay (
+                        TimeSpan.FromSeconds (2),
+                        stoppingToken);
+
+                    continue;
+                    }
+
+
+                // Om kommunikationen har varit nere och PLC:n efter återkomst
+                // står i Idle betyder det i vår simulator att PLC Runtime
+                // har tappat den pågående produktionen.
+                //
+                // Samma order skickas då på nytt.
+                if (communicationWasLost &&
+                    productionState.Status == ProductionStatus.Idle &&
+                    !productionState.ProductionComplete &&
+                    !productionState.ProductionFault)
+                    {
+                    _logger.LogWarning (
+                        "PLC returned to Idle after communication loss. Resending Order {OrderId}.",
+                        order.Id);
+
+
+                    // Skickar samma order igen.
+                    // SQL-status ligger fortfarande kvar som Processing.
+                    await SendOrderToPlcUntilSuccessAsync (
+                        order,
+                        modbusService,
+                        stoppingToken);
+
+
+                    communicationWasLost = false;
+
+                    continue;
+                    }
+
+
+                // Kommunikationen fungerar igen och PLC:n har fortfarande
+                // kvar produktionens status.
+                communicationWasLost = false;
+
+
+                // Kontrollerar om produktionen är färdig.
                 if (productionState.Status == ProductionStatus.Completed ||
                     productionState.ProductionComplete)
                     {
-                    // SQL-status ändras till Completed
+                    // SQL-status ändras till Completed.
                     await orderDataAccess.UpdateStatusAsync (
                         order.Id,
                         OrderStatus.Completed,
@@ -160,8 +278,8 @@ namespace ITOTShop.Integration
                         productionState.ProducedQuantity);
 
 
-                    // Återställer PLC:n innan nästa order får behandlas
-                    await ResetPlcAsync (
+                    // Återställer PLC:n innan nästa order får behandlas.
+                    await ResetPlcUntilIdleAsync (
                         modbusService,
                         stoppingToken);
 
@@ -169,11 +287,12 @@ namespace ITOTShop.Integration
                     }
 
 
-                // Kontrollerar om PLC:n rapporterar ett produktionsfel
+                // Kontrollerar om PLC:n rapporterar ett RIKTIGT produktionsfel.
+                // Först här ska SQL-ordern markeras som Failed.
                 if (productionState.Status == ProductionStatus.Fault ||
                     productionState.ProductionFault)
                     {
-                    // SQL-status ändras till Failed
+                    // SQL-status ändras till Failed.
                     await orderDataAccess.UpdateStatusAsync (
                         order.Id,
                         OrderStatus.Failed,
@@ -186,8 +305,8 @@ namespace ITOTShop.Integration
                         productionState.FaultCode);
 
 
-                    // Återställer PLC:n innan nästa order får behandlas
-                    await ResetPlcAsync (
+                    // Återställer PLC:n innan nästa order får behandlas.
+                    await ResetPlcUntilIdleAsync (
                         modbusService,
                         stoppingToken);
 
@@ -195,7 +314,25 @@ namespace ITOTShop.Integration
                     }
 
 
-                // Väntar 1 sekund innan PLC-status läses igen
+                // Om produktionen tar längre tid än normalt
+                // loggas endast en varning.
+                //
+                // Ordern blir INTE Failed eftersom produktionen
+                // fortfarande kan fortsätta.
+                if (DateTime.UtcNow >= nextLongRunningWarning)
+                    {
+                    _logger.LogWarning (
+                        "Order {OrderId} is still processing in PLC.",
+                        order.Id);
+
+
+                    // Nästa varning skrivs tidigast om 30 sekunder.
+                    nextLongRunningWarning =
+                        DateTime.UtcNow.AddSeconds (30);
+                    }
+
+
+                // Väntar innan PLC-status läses igen.
                 await Task.Delay (
                     TimeSpan.FromSeconds (1),
                     stoppingToken);
@@ -203,17 +340,119 @@ namespace ITOTShop.Integration
             }
 
 
-        // Skickar ResetProduction till OpenPLC
-        // och väntar sedan tills PLC:n verkligen är återställd.
-        private static async Task ResetPlcAsync (
+        // Försöker skicka samma order till OpenPLC tills det lyckas.
+        //
+        // Om PLC:n är offline markeras ordern INTE som Failed.
+        // Den ligger kvar och Integration väntar tills PLC:n är tillgänglig igen.
+        private async Task SendOrderToPlcUntilSuccessAsync (
+            IntegrateOrder order,
             ModbusService modbusService,
             CancellationToken stoppingToken )
             {
-            // Skickar resetsignal till PLC:n
-            await modbusService.ResetProductionAsync ();
+            int attempt = 0;
 
 
-            // Väntar tills PLC:n verkligen är tillbaka i Idle
+            while (!stoppingToken.IsCancellationRequested)
+                {
+                attempt++;
+
+
+                try
+                    {
+                    // Försöker skicka OrderId och Quantity till OpenPLC.
+                    await modbusService.SendOrderAsync (
+                        (ushort) order.Id,
+                        (ushort) order.Quantity);
+
+
+                    // Om tidigare försök misslyckades
+                    // meddelar vi att kommunikationen fungerar igen.
+                    if (attempt > 1)
+                        {
+                        _logger.LogInformation (
+                            "PLC connection restored. Order {OrderId} sent successfully.",
+                            order.Id);
+                        }
+
+
+                    return;
+                    }
+                catch (OperationCanceledException)
+                    when (stoppingToken.IsCancellationRequested)
+                    {
+                    // Programmet håller på att stoppas normalt.
+                    throw;
+                    }
+                catch (Exception ex)
+                    {
+                    // Ordern ligger kvar som Pending om den ännu
+                    // inte har kunnat skickas till PLC:n.
+                    _logger.LogWarning (
+                        "Could not send Order {OrderId} to PLC. Retry {Attempt}. Error: {ErrorMessage}",
+                        order.Id,
+                        attempt,
+                        ex.Message);
+
+
+                    // Väntar innan samma order försöks skickas igen.
+                    await Task.Delay (
+                        TimeSpan.FromSeconds (5),
+                        stoppingToken);
+                    }
+                }
+
+
+            throw new OperationCanceledException (stoppingToken);
+            }
+
+
+        // Återställer PLC:n efter Completed eller Fault.
+        //
+        // Om PLC-kommunikationen är nere väntar Integration tills
+        // kommunikationen fungerar igen innan nästa order får behandlas.
+        private async Task ResetPlcUntilIdleAsync (
+            ModbusService modbusService,
+            CancellationToken stoppingToken )
+            {
+            int resetAttempt = 0;
+
+
+            // Försöker skicka ResetProduction tills det lyckas.
+            while (!stoppingToken.IsCancellationRequested)
+                {
+                resetAttempt++;
+
+
+                try
+                    {
+                    // Skickar ResetProduction till OpenPLC.
+                    await modbusService.ResetProductionAsync ();
+
+                    break;
+                    }
+                catch (OperationCanceledException)
+                    when (stoppingToken.IsCancellationRequested)
+                    {
+                    throw;
+                    }
+                catch (Exception ex)
+                    {
+                    _logger.LogWarning (
+                        "Could not reset PLC. Retry {Attempt}. Error: {ErrorMessage}",
+                        resetAttempt,
+                        ex.Message);
+
+
+                    // Nästa order får inte skickas innan PLC:n är återställd.
+                    await Task.Delay (
+                        TimeSpan.FromSeconds (2),
+                        stoppingToken);
+                    }
+                }
+
+
+            // När resetsignalen har skickats väntar Integration
+            // tills PLC:n verkligen rapporterar Idle.
             await WaitForPlcIdleAsync (
                 modbusService,
                 stoppingToken);
@@ -221,36 +460,70 @@ namespace ITOTShop.Integration
 
 
         // Kontrollerar PLC-status tills PLC:n är tillbaka i Idle.
+        //
         // Nästa order får inte skickas innan:
         // ProductionStatus = Idle
         // ProductionComplete = false
         // ProductionFault = false
-        private static async Task WaitForPlcIdleAsync (
+        //
+        // Om kommunikationen bryts under reset väntar vi och försöker igen.
+        private async Task WaitForPlcIdleAsync (
             ModbusService modbusService,
             CancellationToken stoppingToken )
             {
+            int readAttempt = 0;
+
+
             while (!stoppingToken.IsCancellationRequested)
                 {
-                // Läser aktuell status från OpenPLC
-                var productionState =
-                    modbusService.ReadProductionState ();
-
-
-                // PLC:n måste vara helt återställd
-                // innan nästa order får skickas
-                if (productionState.Status == ProductionStatus.Idle &&
-                    !productionState.ProductionComplete &&
-                    !productionState.ProductionFault)
+                try
                     {
-                    return;
+                    // Läser aktuell status från OpenPLC.
+                    var productionState =
+                        modbusService.ReadProductionState ();
+
+
+                    // Lyckad kommunikation återställer felräknaren.
+                    readAttempt = 0;
+
+
+                    // PLC:n måste vara helt återställd
+                    // innan nästa order får skickas.
+                    if (productionState.Status == ProductionStatus.Idle &&
+                        !productionState.ProductionComplete &&
+                        !productionState.ProductionFault)
+                        {
+                        _logger.LogInformation (
+                            "PLC reset completed. PLC is Idle.");
+
+                        return;
+                        }
+                    }
+                catch (OperationCanceledException)
+                    when (stoppingToken.IsCancellationRequested)
+                    {
+                    throw;
+                    }
+                catch (Exception ex)
+                    {
+                    readAttempt++;
+
+
+                    _logger.LogWarning (
+                        "Could not read PLC status during reset. Retry {Attempt}. Error: {ErrorMessage}",
+                        readAttempt,
+                        ex.Message);
                     }
 
 
-                // Väntar en kort stund innan PLC-status kontrolleras igen
+                // Väntar innan PLC-status kontrolleras igen.
                 await Task.Delay (
-                    TimeSpan.FromMilliseconds (500),
+                    TimeSpan.FromSeconds (1),
                     stoppingToken);
                 }
+
+
+            throw new OperationCanceledException (stoppingToken);
             }
         }
     }
