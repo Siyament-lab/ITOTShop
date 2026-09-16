@@ -17,14 +17,16 @@ namespace ITOTShop.Integration.DataAccess
             {
             _Context = context;
             }
-        public async Task<List<IntegrateOrder>> GetPendingOrdersAsync (
+        public async Task<IntegrateOrder?> GetNextPendingOrderAsync (
             CancellationToken cancellationToken = default )
             {
-            // Hämtar alla orderar som väntar på att behandlas
+            // Hämtar den äldsta order som väntar på att behandlas
             return await _Context.Orders
                 .AsNoTracking () //Tillfälligt användning för att minska risken att råka ändra något i db.
-                .Where (o => o.Status == Enums.OrderStatus.Pending)
-                .ToListAsync (cancellationToken);
+                .Where (o => o.Status == OrderStatus.Pending)
+                .OrderBy (o => o.CreatedAt)
+                .FirstOrDefaultAsync (cancellationToken);
+                
             }
         public async Task UpdateStatusAsync (
                 int orderId,

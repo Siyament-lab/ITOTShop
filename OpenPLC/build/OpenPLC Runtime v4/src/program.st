@@ -13,6 +13,7 @@ PROGRAM main
     ResetProduction AT %QX0.1 : BOOL := FALSE;
     ProductionComplete AT %QX0.2 : BOOL := FALSE;
     ProductionFault AT %QX0.3 : BOOL := FALSE;
+    TotalProducedQuantity AT %QW5 : UINT := 0;
   END_VAR
 
   (* Återställer hela produktionsprocessen *)
@@ -82,6 +83,7 @@ PROGRAM main
 
               IF ProductionTimer.Q THEN
                   ProducedQuantity := ProducedQuantity + 1;
+                  TotalProducedQuantity := TotalProducedQuantity + 1;
                   ResetTimer := TRUE;
 
                   (* Markera ordern som färdig *)

@@ -6,7 +6,7 @@
 namespace strucpp {
 
 Program_MAIN::Program_MAIN()
-    : RESETTIMER(false), ORDERID(0), REQUESTEDQUANTITY(0), PRODUCTIONSTATUS(0), PRODUCEDQUANTITY(0), FAULTCODE(0), STARTPRODUCTION(false), RESETPRODUCTION(false), PRODUCTIONCOMPLETE(false), PRODUCTIONFAULT(false)
+    : RESETTIMER(false), ORDERID(0), REQUESTEDQUANTITY(0), PRODUCTIONSTATUS(0), PRODUCEDQUANTITY(0), FAULTCODE(0), STARTPRODUCTION(false), RESETPRODUCTION(false), PRODUCTIONCOMPLETE(false), PRODUCTIONFAULT(false), TOTALPRODUCEDQUANTITY(0)
 {
     // Initialize located variable pointers
     locatedVars[0].pointer = ORDERID.raw_ptr();
@@ -18,6 +18,7 @@ Program_MAIN::Program_MAIN()
     locatedVars[6].pointer = RESETPRODUCTION.raw_ptr();
     locatedVars[7].pointer = PRODUCTIONCOMPLETE.raw_ptr();
     locatedVars[8].pointer = PRODUCTIONFAULT.raw_ptr();
+    locatedVars[9].pointer = TOTALPRODUCEDQUANTITY.raw_ptr();
 }
 
 void Program_MAIN::run() {
@@ -73,6 +74,7 @@ void Program_MAIN::run() {
                 PRODUCTIONTIMER.ENO = true;
                 if (PRODUCTIONTIMER.Q) {
                     PRODUCEDQUANTITY = PRODUCEDQUANTITY + 1;
+                    TOTALPRODUCEDQUANTITY = TOTALPRODUCEDQUANTITY + 1;
                     RESETTIMER = true;
                     if (PRODUCEDQUANTITY >= REQUESTEDQUANTITY) {
                         PRODUCTIONSTATUS = 2;

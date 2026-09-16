@@ -8,8 +8,8 @@ namespace ITOTShop.Integration.Interfaces
     {
     public interface IOrderDataAccess
         {
-        //Hämtar orderar som inte har gått vidare till OT
-        Task<List<IntegrateOrder>> GetPendingOrdersAsync (
+        //Hämtar order som står på "pending" och inte har gått vidare till OT
+        Task<IntegrateOrder?> GetNextPendingOrderAsync (
             CancellationToken cancellationToken = default);
 
         //Uppdaterar status på ordern efter den är hämtat fr orderboken i db

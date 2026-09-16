@@ -1,5 +1,7 @@
 ﻿using NModbus;
 using System.Net.Sockets;
+using ITOTShop.Integration.DTOs;
+using ITOTShop.Integration.Enums;
 
 namespace ITOTShop.Integration.Services
     {
@@ -9,12 +11,21 @@ namespace ITOTShop.Integration.Services
         private readonly int _port = 5020;
         private readonly byte _slaveId = 1;
 
-        
 
-        // OpenPLC Modbus-adresser
-        private const ushort OrderIdAddress = 0;             // %QW0
-        private const ushort RequestedQuantityAddress = 1;  // %QW1
-        private const ushort StartProductionAddress = 0;    // %QX0.0
+
+        // Data som C# skickar till PLC
+        private const ushort OrderIdAddress = 0;              // %QW0
+        private const ushort RequestedQuantityAddress = 1;   // %QW1
+        private const ushort StartProductionAddress = 0;     // %QX0.0
+        private const ushort ResetProductionAddress = 1;    //%QX0.1
+
+        // Data som C# läser från PLC
+        private const ushort ProductionStatusAddress = 2;    // %QW2
+        private const ushort ProducedQuantityAddress = 3;    // %QW3
+        private const ushort FaultCodeAddress = 4;           // %QW4
+
+        private const ushort ProductionCompleteAddress = 2;  // %QX0.2
+        private const ushort ProductionFaultAddress = 3;     // %QX0.3
 
         // ======================== TEST AV PLC ========================
         //public async Task SendTestOrderAsync ()
@@ -97,7 +108,7 @@ namespace ITOTShop.Integration.Services
 
         // ==================== PERMANENT PROGRAM ====================
 
-
+        //Skickar order-data till PLC
         public async Task SendOrderAsync (
             ushort orderId,
             ushort requestedQuantity )
@@ -139,5 +150,68 @@ namespace ITOTShop.Integration.Services
                 StartProductionAddress,
                 false);
             }
+
+        //SKickar återställning av produktion från PLC
+        public async Task ResetProductionAsync ()
+            {
+            using var tcpClient = new TcpClient ();
+
+            // Ansluter till OpenPLC Runtime
+            await tcpClient.ConnectAsync (
+                _ipAddress,
+                _port);
+
+            var factory = new ModbusFactory ();
+            var master = factory.CreateMaster (tcpClient);
+
+            // Skickar resetsignal till %QX0.1
+            master.WriteSingleCoil (
+                _slaveId,
+                ResetProductionAddress,
+                true);
+
+            // Kort signal så PLC:n hinner registrera reset
+            await Task.Delay (5000);
+
+            // Släpper resetsignalen igen
+            master.WriteSingleCoil (
+                _slaveId,
+                ResetProductionAddress,
+                false);
+            }
+
+        //Läser produktionsstatus från PLC
+        public ProductionStateDto ReadProductionState ()
+            {
+            using var tcpClient = new TcpClient (
+                _ipAddress,
+                _port);
+
+            var factory = new ModbusFactory ();
+            var master = factory.CreateMaster (tcpClient);
+
+            // Läser %QW2, %QW3 och %QW4
+            var registers = master.ReadHoldingRegisters (
+                _slaveId,
+                ProductionStatusAddress,
+                3);
+
+            // Läser %QX0.2 och %QX0.3
+            var coils = master.ReadCoils (
+                _slaveId,
+                ProductionCompleteAddress,
+                2);
+
+            return new ProductionStateDto
+                {
+                Status = (ProductionStatus) registers[0],
+                ProducedQuantity = registers[1],
+                FaultCode = registers[2],
+
+                ProductionComplete = coils[0],
+                ProductionFault = coils[1]
+                };
+            }
+        
         }
     }

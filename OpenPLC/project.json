@@ -32,7 +32,12 @@
         "main": [
           "OrderId",
           "RequestedQuantity",
-          "StartProduction"
+          "ProductionStatus",
+          "ProducedQuantity",
+          "ResetProduction",
+          "ProductionComplete",
+          "ProductionFault",
+          "TotalProducedQuantity"
         ]
       }
     }

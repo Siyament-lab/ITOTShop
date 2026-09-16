@@ -14,7 +14,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="DTOs\" />
     <Folder Include="Validation\" />
     <Folder Include="Modbus\" />
     <Folder Include="Logging\" />

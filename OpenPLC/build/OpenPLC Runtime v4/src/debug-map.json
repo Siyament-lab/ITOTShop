@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "md5": "206e913f68eba022086c198a1dc25376",
+  "md5": "0d3c82052a058b871c60e5a2056b2182",
   "typeTags": {
     "BOOL": 0,
     "SINT": 1,
@@ -27,7 +27,7 @@
   "arrays": [
     {
       "index": 0,
-      "count": 14
+      "count": 15
     }
   ],
   "leaves": [
@@ -128,6 +128,13 @@
       "path": "INSTANCE0.PRODUCTIONFAULT",
       "type": "BOOL",
       "size": 1
+    },
+    {
+      "arrayIdx": 0,
+      "elemIdx": 14,
+      "path": "INSTANCE0.TOTALPRODUCEDQUANTITY",
+      "type": "UINT",
+      "size": 2
     }
   ]
 }

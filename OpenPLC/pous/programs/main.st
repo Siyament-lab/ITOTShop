@@ -9,6 +9,7 @@ PROGRAM main
     ResetProduction : BOOL AT %QX0.1 := FALSE; (* Återställer produktionsprocessen *)
     ProductionComplete : BOOL AT %QX0.2 := FALSE; (* Visar att ordern är färdig *)
     ProductionFault : BOOL AT %QX0.3 := FALSE; (* Visar att ett produktionsfel har uppstått *)
+    TotalProducedQuantity : UINT AT %QW5 := 0; (* Totalt antal producerade enheter *)
     ProductionTimer : TON; (* TTimer som simulerar produktionstiden *)
     ResetTimer : BOOL := FALSE; (* Återställer timern mellan varje produkt *)
   END_VAR
@@ -80,6 +81,7 @@ end_if;
 
             IF ProductionTimer.Q THEN
                 ProducedQuantity := ProducedQuantity + 1;
+                TotalProducedQuantity := TotalProducedQuantity + 1;
                 ResetTimer := TRUE;
 
                 (* Markera ordern som färdig *)

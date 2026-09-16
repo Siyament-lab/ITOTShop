@@ -39,7 +39,7 @@ void TON::operator()() {
 // Located Variables Descriptor Array
 // =============================================================================
 
-LocatedVar locatedVars[9] = {
+LocatedVar locatedVars[10] = {
     { LocatedArea::Output, LocatedSize::Word, 0, 0, {0, 0, 0}, nullptr },  // ORDERID AT %QW0
     { LocatedArea::Output, LocatedSize::Word, 1, 0, {0, 0, 0}, nullptr },  // REQUESTEDQUANTITY AT %QW1
     { LocatedArea::Output, LocatedSize::Word, 2, 0, {0, 0, 0}, nullptr },  // PRODUCTIONSTATUS AT %QW2
@@ -48,7 +48,8 @@ LocatedVar locatedVars[9] = {
     { LocatedArea::Output, LocatedSize::Bit, 0, 0, {0, 0, 0}, nullptr },  // STARTPRODUCTION AT %QX0.0
     { LocatedArea::Output, LocatedSize::Bit, 0, 1, {0, 0, 0}, nullptr },  // RESETPRODUCTION AT %QX0.1
     { LocatedArea::Output, LocatedSize::Bit, 0, 2, {0, 0, 0}, nullptr },  // PRODUCTIONCOMPLETE AT %QX0.2
-    { LocatedArea::Output, LocatedSize::Bit, 0, 3, {0, 0, 0}, nullptr }  // PRODUCTIONFAULT AT %QX0.3
+    { LocatedArea::Output, LocatedSize::Bit, 0, 3, {0, 0, 0}, nullptr },  // PRODUCTIONFAULT AT %QX0.3
+    { LocatedArea::Output, LocatedSize::Word, 5, 0, {0, 0, 0}, nullptr }  // TOTALPRODUCEDQUANTITY AT %QW5
 };
 
 #ifdef STRUCPP_THREADED

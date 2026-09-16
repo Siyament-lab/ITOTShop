@@ -98,6 +98,7 @@ public:
     IEC_BOOL RESETPRODUCTION;  // AT %QX0.1
     IEC_BOOL PRODUCTIONCOMPLETE;  // AT %QX0.2
     IEC_BOOL PRODUCTIONFAULT;  // AT %QX0.3
+    IEC_UINT TOTALPRODUCEDQUANTITY;  // AT %QW5
 
     // Implicit IEC 61131-3 ENO pin (mirrors EN)
     IEC_BOOL ENO = true;
@@ -109,7 +110,7 @@ public:
     void run() override;
 
 #ifdef STRUCPP_THREADED
-    void located_range(uint32_t* __off, uint32_t* __cnt) const override { *__off = 0; *__cnt = 9; }
+    void located_range(uint32_t* __off, uint32_t* __cnt) const override { *__off = 0; *__cnt = 10; }
 #endif
 };
 
@@ -151,9 +152,10 @@ public:
 // Forward: RESETPRODUCTION AT %QX0.1 in Program_MAIN
 // Forward: PRODUCTIONCOMPLETE AT %QX0.2 in Program_MAIN
 // Forward: PRODUCTIONFAULT AT %QX0.3 in Program_MAIN
+// Forward: TOTALPRODUCEDQUANTITY AT %QW5 in Program_MAIN
 
-extern LocatedVar locatedVars[9];
-constexpr uint32_t locatedVarsCount = 9;
+extern LocatedVar locatedVars[10];
+constexpr uint32_t locatedVarsCount = 10;
 
 #ifdef STRUCPP_THREADED
 extern void *locatedGlobals[1];
