@@ -43,11 +43,7 @@ void Program_MAIN::run() {
                 PRODUCTIONSTATUS = 3;
                 FAULTCODE = 2;
                 PRODUCTIONFAULT = true;
-            } else if (REQUESTEDQUANTITY == 0) {
-                PRODUCTIONSTATUS = 3;
-                FAULTCODE = 2;
-                PRODUCTIONFAULT = true;
-            } else if (REQUESTEDQUANTITY > 100) {
+            } else if (REQUESTEDQUANTITY > 20) {
                 PRODUCTIONSTATUS = 3;
                 FAULTCODE = 3;
                 PRODUCTIONFAULT = true;

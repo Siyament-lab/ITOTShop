@@ -41,16 +41,11 @@ elsif RequestedQuantity = 0 then
 ProductionStatus := 3;
 FaultCode := 2;
 ProductionFault := TRUE;
-
-elsif RequestedQuantity = 0 then
-ProductionStatus :=3;
-FaultCode := 2;
-ProductionFault := TRUE;
-
-ELSIF RequestedQuantity > 100 THEN
-            ProductionStatus := 3;
-            FaultCode := 3;
-            ProductionFault := TRUE;
+ELSIF RequestedQuantity > 20 THEN
+    (* Simulerat produktionsfel - för stor order *)
+    ProductionStatus := 3;
+    FaultCode := 3;
+    ProductionFault := TRUE;
 
         ELSE
             ProductionStatus := 1;
