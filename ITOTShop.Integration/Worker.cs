@@ -75,9 +75,18 @@ namespace ITOTShop.Integration
                         modbusService,
                         stoppingToken);
                     }
+                catch (OperationCanceledException)
+                    when (stoppingToken.IsCancellationRequested)
+                    {
+                    // Programmet håller på att stoppas normalt
+                    _logger.LogInformation (
+                        "Integration service stopping.");
+
+                    break;
+                    }
                 catch (Exception ex)
                     {
-                    // Ett fel ska inte stoppa hela integrationsprogrammet
+                    // Ett vanligt fel ska inte stoppa hela integrationsprogrammet
                     _logger.LogError (
                         ex,
                         "An error occurred while processing an order.");
