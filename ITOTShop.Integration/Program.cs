@@ -1,6 +1,7 @@
 using ITOTShop.Integration.Data;
 using ITOTShop.Integration.DataAccess;
 using ITOTShop.Integration.Interfaces;
+using ITOTShop.Integration.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace ITOTShop.Integration
@@ -25,6 +26,9 @@ namespace ITOTShop.Integration
 
             // Registrerar Worker som kör integrationsprocessen i bakgrunden
             builder.Services.AddHostedService<Worker> ();
+
+            //Registrerar =========Modbusservice============== 
+            builder.Services.AddScoped<ModbusService> ();
 
             // Bygger och startar Worker Service
             var host = builder.Build ();

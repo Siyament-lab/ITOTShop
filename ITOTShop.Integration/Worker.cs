@@ -1,5 +1,6 @@
-using ITOTShop.Integration.Interfaces;
 using ITOTShop.Integration.Enums;
+using ITOTShop.Integration.Interfaces;
+using ITOTShop.Integration.Services;
 
 namespace ITOTShop.Integration
     {
@@ -21,6 +22,15 @@ namespace ITOTShop.Integration
             {
             _logger.LogInformation ("Integration service started.");
 
+            //// Tillfälligt Modbus-test mot OpenPLC
+            //using (var testScope = _scopeFactory.CreateScope ())
+            //    {
+            //    var modbusService =
+            //        testScope.ServiceProvider.GetRequiredService<ModbusService> ();
+
+            //    await modbusService.SendTestOrderAsync ();
+            //    }
+
             while (!stoppingToken.IsCancellationRequested)
                 {
                 try
@@ -30,6 +40,8 @@ namespace ITOTShop.Integration
 
                     var orderDataAccess =
                         scope.ServiceProvider.GetRequiredService<IOrderDataAccess> ();
+                    var modbusService =
+                        scope.ServiceProvider.GetRequiredService<ModbusService> ();
 
                     // Hämtar endast ordrar som väntar på behandling
                     var pendingOrders =
@@ -54,17 +66,21 @@ namespace ITOTShop.Integration
                                 order.Quantity,
                                 order.UnitPrice,
                                 order.Status);
-                            
-                            // Markerar ordern som påbörjad så att den inte hämtas igen
+
+                            // Skickar ordern till OpenPLC
+                            await modbusService.SendOrderAsync (
+                                (ushort) order.Id,
+                                (ushort) order.Quantity);
+
+                            // Markerar ordern som Processing efter att den skickats till PLC:n
                             await orderDataAccess.UpdateStatusAsync (
                                 order.Id,
                                 OrderStatus.Processing,
                                 stoppingToken);
 
                             _logger.LogInformation (
-                                "Order {OrderId} changed to Processing.",
+                                "Order {OrderId} sent to PLC and changed to Processing.",
                                 order.Id);
-
                             }
                         }
                     }
