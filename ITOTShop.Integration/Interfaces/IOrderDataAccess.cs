@@ -1,4 +1,5 @@
-﻿using ITOTShop.Integration.Enums;
+﻿using ITOTShop.Integration.DTOs;
+using ITOTShop.Integration.Enums;
 using ITOTShop.Integration.Models;
 using System;
 using System.Collections.Generic;
@@ -17,5 +18,8 @@ namespace ITOTShop.Integration.Interfaces
             int orderId,
             OrderStatus Status,
             CancellationToken cancellationToken = default );
+
+        Task<OrderStatisticsDto> GetStatisticsAsync (
+        CancellationToken cancellationToken = default );
         }
     }

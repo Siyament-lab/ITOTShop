@@ -1,12 +1,13 @@
 ﻿
-using Microsoft.EntityFrameworkCore;
 using ITOTShop.Integration.Data;
+using ITOTShop.Integration.DTOs;
+using ITOTShop.Integration.Enums;
 using ITOTShop.Integration.Interfaces;
 using ITOTShop.Integration.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using ITOTShop.Integration.Enums;
 
 namespace ITOTShop.Integration.DataAccess
     {
@@ -49,6 +50,45 @@ namespace ITOTShop.Integration.DataAccess
             order.UpdatedAt = DateTime.UtcNow;
 
             await _Context.SaveChangesAsync (cancellationToken);
+            }
+        // Hämtar permanenta produktionsvärden från SQL.
+        // Dessa värden överlever om Integration eller PLC startas om.
+        public async Task<OrderStatisticsDto> GetStatisticsAsync (
+            CancellationToken cancellationToken = default )
+            {
+            // Räknar alla ordrar som har slutförts.
+            var completedOrders =
+                await _Context.Orders
+                    .CountAsync (
+                        o => o.Status == OrderStatus.Completed,
+                        cancellationToken);
+
+
+            // Räknar alla ordrar som har misslyckats.
+            var failedOrders =
+                await _Context.Orders
+                    .CountAsync (
+                        o => o.Status == OrderStatus.Failed,
+                        cancellationToken);
+
+
+            // Summerar Quantity för alla lyckade ordrar.
+            // Detta blir den permanenta totalproduktionen.
+            var producedUnits =
+                await _Context.Orders
+                    .Where (
+                        o => o.Status == OrderStatus.Completed)
+                    .SumAsync (
+                        o => (long) o.Quantity,
+                        cancellationToken);
+
+
+            return new OrderStatisticsDto
+                {
+                CompletedOrders = completedOrders,
+                FailedOrders = failedOrders,
+                ProducedUnits = producedUnits
+                };
             }
         }
     }

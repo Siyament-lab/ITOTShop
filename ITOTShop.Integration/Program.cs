@@ -2,6 +2,8 @@ using ITOTShop.Integration.Data;
 using ITOTShop.Integration.DataAccess;
 using ITOTShop.Integration.Interfaces;
 using ITOTShop.Integration.Services;
+using ITOTShop.Integration.Monitoring;
+using OpenTelemetry.Metrics;
 using Microsoft.EntityFrameworkCore;
 
 namespace ITOTShop.Integration
@@ -29,6 +31,26 @@ namespace ITOTShop.Integration
 
             //Registrerar =========Modbusservice============== 
             builder.Services.AddScoped<ModbusService> ();
+
+            //Registerar vår Metrics-service
+            builder.Services.AddSingleton<IntegrationMetrics> ();
+
+            // Konfigurerar OpenTelemetry och exponerar metrics för Prometheus.
+            builder.Services
+                .AddOpenTelemetry ()
+                .WithMetrics (metrics =>
+                {
+                    metrics
+                        // Lyssnar på alla värden som IntegrationMetrics skapar.
+                        .AddMeter (IntegrationMetrics.MeterName)
+
+                        .AddPrometheusHttpListener (options =>
+                        {
+                            // Exponerar metrics lokalt på datorn
+                            options.Host = "localhost";
+                            options.Port = 9464;
+                        });
+                });
 
             // Bygger och startar Worker Service
             var host = builder.Build ();
