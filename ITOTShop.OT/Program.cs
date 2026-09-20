@@ -6,23 +6,15 @@ namespace ITOTShop.OT
         {
         static async Task Main ( string[] args )
             {
-            // Skapar ModbusService och håller samma anslutning
-            // mot OpenPLC under hela programmets körning.
+            // Håller samma Modbus-anslutning mot OpenPLC
+            // under hela programmets körning.
             using var modbusMonitorService =
                 new ModbusMonitorService ();
 
 
-            // Räknar antal färdiga och misslyckade ordrar
-            // under tiden OT-programmet körs.
-            int succeededOrders = 0;
-            int failedOrders = 0;
-
-
-            // Sparar senaste OrderId som redan har räknats.
-            // Detta förhindrar att samma order räknas flera gånger
-            // när OT-programmet uppdaterar status kontinuerligt.
-            ushort? lastSucceededOrderId = null;
-            ushort? lastFailedOrderId = null;
+            // Hanterar statistik för lyckade och misslyckade ordrar.
+            var productionStatisticsService =
+                new PlcStatisticsService ();
 
 
             Console.Clear ();
@@ -32,7 +24,7 @@ namespace ITOTShop.OT
                 {
                 try
                     {
-                    // Läser aktuell status från OpenPLC.
+                    // Läser aktuell produktionsstatus från OpenPLC.
                     var productionState =
                         modbusMonitorService.ReadProductionState ();
 
@@ -50,34 +42,13 @@ namespace ITOTShop.OT
                                 };
 
 
-                    // Kontrollerar om en ny order har blivit färdig.
-                    if ((productionState.ProductionStatus == 2 ||
-                         productionState.ProductionComplete) &&
-                        productionState.OrderId != 0 &&
-                        lastSucceededOrderId != productionState.OrderId)
-                        {
-                        succeededOrders++;
-
-                        lastSucceededOrderId =
-                            productionState.OrderId;
-                        }
+                    // Uppdaterar statistik utifrån aktuell PLC-status.
+                    productionStatisticsService.UpdateStatistics (
+                        productionState);
 
 
-                    // Kontrollerar om en ny order har fått produktionsfel.
-                    if ((productionState.ProductionStatus == 3 ||
-                         productionState.ProductionFault) &&
-                        productionState.OrderId != 0 &&
-                        lastFailedOrderId != productionState.OrderId)
-                        {
-                        failedOrders++;
-
-                        lastFailedOrderId =
-                            productionState.OrderId;
-                        }
-
-
-                    // Flyttar markören tillbaka till början av konsolen.
-                    // Vi slipper Console.Clear() varje gång och minskar flimmer.
+                    // Flyttar markören tillbaka till början av konsolen
+                    // för att minska flimmer vid live-uppdateringen.
                     Console.SetCursorPosition (0, 0);
 
 
@@ -123,13 +94,13 @@ namespace ITOTShop.OT
                         "--- Production Totals ---");
 
                     Console.WriteLine (
-                        $"Succeeded Orders:     {succeededOrders}        ");
+                        $"Succeeded Orders:     {productionStatisticsService.SucceededOrders}        ");
 
                     Console.WriteLine (
-                        $"Failed Orders:        {failedOrders}        ");
+                        $"Failed Orders:        {productionStatisticsService.FailedOrders}        ");
 
                     Console.WriteLine (
-                        $"Total Orders:         {succeededOrders + failedOrders}        ");
+                        $"Total Orders:         {productionStatisticsService.TotalOrders}        ");
 
 
                     Console.WriteLine ();
@@ -138,15 +109,14 @@ namespace ITOTShop.OT
                         "Live update running...");
 
 
-                    // Uppdaterar snabbare än tidigare så att korta
-                    // Completed/Fault-statusar lättare fångas.
+                    // Uppdaterar live-status fyra gånger per sekund.
                     await Task.Delay (
                         TimeSpan.FromMilliseconds (250));
                     }
                 catch (Exception ex)
                     {
-                    // Om OpenPLC tillfälligt inte går att nå
-                    // behåller vi tidigare totalsiffror.
+                    // Om OpenPLC inte går att nå behåller vi
+                    // den statistik som redan har samlats in.
                     Console.SetCursorPosition (0, 0);
 
                     Console.WriteLine (
@@ -166,16 +136,16 @@ namespace ITOTShop.OT
                         "--- Production Totals ---");
 
                     Console.WriteLine (
-                        $"Succeeded Orders:     {succeededOrders}");
+                        $"Succeeded Orders:     {productionStatisticsService.SucceededOrders}");
 
                     Console.WriteLine (
-                        $"Failed Orders:        {failedOrders}");
+                        $"Failed Orders:        {productionStatisticsService.FailedOrders}");
 
                     Console.WriteLine (
-                        $"Total Orders:         {succeededOrders + failedOrders}");
+                        $"Total Orders:         {productionStatisticsService.TotalOrders}");
 
 
-                    // Väntar innan OT-programmet försöker läsa PLC:n igen.
+                    // Väntar innan nästa anslutningsförsök.
                     await Task.Delay (
                         TimeSpan.FromSeconds (1));
                     }
