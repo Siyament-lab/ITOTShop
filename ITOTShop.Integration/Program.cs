@@ -46,7 +46,7 @@ namespace ITOTShop.Integration
 
                         .AddPrometheusHttpListener (options =>
                         {
-                            // Exponerar metrics lokalt på datorn
+                            // får tillgång till metrics lokalt på datorn
                             options.Host = "localhost";
                             options.Port = 9464;
                         });

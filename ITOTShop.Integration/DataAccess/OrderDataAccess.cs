@@ -18,9 +18,21 @@ namespace ITOTShop.Integration.DataAccess
             {
             _Context = context;
             }
-        public async Task<IntegrateOrder?> GetNextPendingOrderAsync (
+
+        //Först kontrollera ordrar som finns under processing sendan ordrar som står på tur för behandling
+        public async Task<IntegrateOrder?> GetNextOrderToProcessAsync (
             CancellationToken cancellationToken = default )
             {
+            var processingOrder = await _Context.Orders
+                .AsNoTracking ()
+                .Where (o => o.Status == OrderStatus.Processing)
+                .OrderBy (o => o.CreatedAt)
+                .FirstOrDefaultAsync (cancellationToken);
+
+            if (processingOrder != null )
+                {
+                return processingOrder;
+                }
             // Hämtar den äldsta order som väntar på att behandlas
             return await _Context.Orders
                 .AsNoTracking () //Tillfälligt användning för att minska risken att råka ändra något i db.

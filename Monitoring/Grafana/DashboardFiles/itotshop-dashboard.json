@@ -23,7 +23,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "ffyszhzz4rke8c"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -75,7 +75,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "ffyszhzz4rke8c"
+            "uid": "prometheus"
           },
           "editorMode": "builder",
           "expr": "itotshop_orders_completed",
@@ -90,7 +90,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "ffyszhzz4rke8c"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -159,7 +159,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "ffyszhzz4rke8c"
+            "uid": "prometheus"
           },
           "editorMode": "builder",
           "expr": "itotshop_plc_connected",
@@ -174,7 +174,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "ffyszhzz4rke8c"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -226,7 +226,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "ffyszhzz4rke8c"
+            "uid": "prometheus"
           },
           "editorMode": "builder",
           "expr": "itotshop_orders_failed",
@@ -241,7 +241,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "ffyszhzz4rke8c"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -293,7 +293,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "ffyszhzz4rke8c"
+            "uid": "prometheus"
           },
           "editorMode": "builder",
           "expr": "itotshop_units_produced",
@@ -308,7 +308,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "ffyszhzz4rke8c"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -387,7 +387,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "ffyszhzz4rke8c"
+            "uid": "prometheus"
           },
           "editorMode": "builder",
           "expr": "itotshop_plc_production_status",
@@ -402,7 +402,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "ffyszhzz4rke8c"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -489,7 +489,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "ffyszhzz4rke8c"
+            "uid": "prometheus"
           },
           "editorMode": "builder",
           "expr": "itotshop_plc_produced_quantity",

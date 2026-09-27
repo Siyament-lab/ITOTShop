@@ -142,8 +142,8 @@ namespace ITOTShop.Integration.Services
                 StartProductionAddress,
                 true);
 
-            // Kort startsignal till PLC:n
-            await Task.Delay (200);
+            // Startsignal till PLC:n 1s för att den ska hinna läsa
+            await Task.Delay (1000);
 
             master.WriteSingleCoil (
                 _slaveId,

@@ -1,4 +1,21 @@
 services:
+  prometheus:
+    image: prom/prometheus:v3.14.0
+    container_name: itotshop-prometheus
+
+    # Prometheus använder host-nätverket för att nå Integration på localhost:9464.
+    network_mode: host
+
+    volumes:
+      # Läser Prometheus-konfigurationen från projektet.
+      - ./prometheus-config.yml:/etc/prometheus/prometheus.yml:ro
+
+      # Sparar Prometheus historiska data.
+      - prometheus-data:/prometheus
+
+    restart: unless-stopped
+
+
   grafana:
     image: grafana/grafana:13.2.2
     container_name: itotshop-grafana
@@ -6,18 +23,24 @@ services:
     ports:
       - "3000:3000"
 
+      #Behåller inlogg till grafana
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: Grafana2026!
 
     volumes:
+      # Grafana provisioning.
       - ./Grafana/Provisioning:/etc/grafana/provisioning:ro
+
+      # Dashboard-filen.
       - ./Grafana/DashboardFiles:/var/lib/grafana/dashboards:ro
 
-      # Sparar användare, lösenord och Grafanas interna data permanent.
+      # Sparar Grafanas användare, lösenord och inställningar.
       - grafana-data:/var/lib/grafana
 
     restart: unless-stopped
 
+
 volumes:
+  prometheus-data:
   grafana-data:
