@@ -2,7 +2,7 @@ using ITOTShop.Integration.DTOs;
 using ITOTShop.Integration.Enums;
 using ITOTShop.Integration.Interfaces;
 using ITOTShop.Integration.Models;
-using ITOTShop.Integration.Monitoring;
+using ITOTShop.Integration.Metrics;
 using ITOTShop.Integration.Services;
 
 namespace ITOTShop.Integration

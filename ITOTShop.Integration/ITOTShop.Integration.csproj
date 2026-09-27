@@ -14,11 +14,4 @@
     <PackageReference Include="OpenTelemetry.Exporter.Prometheus.HttpListener" Version="1.19.0-beta.1" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.19.0" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Validation\" />
-    <Folder Include="Modbus\" />
-    <Folder Include="Logging\" />
-    <Folder Include="Exceptions\" />
-  </ItemGroup>
 </Project>

@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.Metrics;
 
-namespace ITOTShop.Integration.Monitoring
+namespace ITOTShop.Integration.Metrics
     {
     public class IntegrationMetrics
         {
