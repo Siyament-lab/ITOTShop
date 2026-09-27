@@ -2,6 +2,7 @@ using ITOTShop.Integration.DTOs;
 using ITOTShop.Integration.Enums;
 using ITOTShop.Integration.Interfaces;
 using ITOTShop.Integration.Models;
+using ITOTShop.Integration.Monitoring;
 using ITOTShop.Integration.Services;
 
 namespace ITOTShop.Integration
@@ -10,14 +11,17 @@ namespace ITOTShop.Integration
         {
         private readonly ILogger<Worker> _logger;
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly IntegrationMetrics _metrics;
 
 
         public Worker (
             ILogger<Worker> logger,
-            IServiceScopeFactory scopeFactory )
+            IServiceScopeFactory scopeFactory,
+            IntegrationMetrics metrics )
             {
             _logger = logger;
             _scopeFactory = scopeFactory;
+            _metrics = metrics;
             }
 
 
@@ -50,6 +54,14 @@ namespace ITOTShop.Integration
                             .GetRequiredService<ModbusService> ();
 
 
+                    // Hämtar senaste permanenta totalsiffrorna från SQL.
+                    // Detta gör att metrics återställs korrekt
+                    // även om Integration startas om.
+                    await RefreshOrderStatisticsAsync (
+                        orderDataAccess,
+                        stoppingToken);
+
+
                     // Hämtar endast EN Pending-order åt gången.
                     var order =
                         await orderDataAccess
@@ -57,12 +69,18 @@ namespace ITOTShop.Integration
                                 stoppingToken);
 
 
-                    // Om ingen Pending-order finns väntar Worker
-                    // innan databasen kontrolleras igen.
+                    // Om ingen Pending-order finns kontrolleras ändå
+                    // PLC-status så att Grafana visar aktuell anslutning
+                    // och produktionsstatus även när systemet är Idle.
                     if (order == null)
                         {
+                        UpdateIdlePlcMetrics (
+                            modbusService);
+
+
                         _logger.LogInformation (
                             "No pending orders found.");
+
 
                         await Task.Delay (
                             TimeSpan.FromSeconds (5),
@@ -183,6 +201,13 @@ namespace ITOTShop.Integration
                         modbusService.ReadProductionState ();
 
 
+                    // Uppdaterar live-metrics med aktuell PLC-status.
+                    // En lyckad läsning betyder även att PLC:n är ansluten.
+                    _metrics.UpdatePlcState (
+                        (int) productionState.Status,
+                        productionState.ProducedQuantity);
+
+
                     // Om vi tidigare tappade kontakten men nu lyckas läsa igen
                     // har kommunikationen återställts.
                     if (communicationWasLost)
@@ -207,6 +232,14 @@ namespace ITOTShop.Integration
                     {
                     plcReadFailures++;
                     communicationWasLost = true;
+
+
+                    // Markerar PLC som frånkopplad i metrics.
+                    _metrics.SetPlcDisconnected ();
+
+
+                    // Registrerar ett kommunikationsfel mot PLC.
+                    _metrics.RecordPlcCommunicationFailure ();
 
 
                     // Ordern är fortfarande Processing.
@@ -272,6 +305,14 @@ namespace ITOTShop.Integration
                         stoppingToken);
 
 
+                    // Uppdaterar totalsiffrorna från SQL efter Completed.
+                    // Completed Orders och Produced Units får därmed
+                    // permanenta värden som överlever omstart.
+                    await RefreshOrderStatisticsAsync (
+                        orderDataAccess,
+                        stoppingToken);
+
+
                     _logger.LogInformation (
                         "Order {OrderId} completed. Produced quantity: {ProducedQuantity}",
                         order.Id,
@@ -296,6 +337,14 @@ namespace ITOTShop.Integration
                     await orderDataAccess.UpdateStatusAsync (
                         order.Id,
                         OrderStatus.Failed,
+                        stoppingToken);
+
+
+                    // Uppdaterar totalsiffrorna från SQL efter Failed.
+                    // Failed Orders får därmed ett permanent värde
+                    // som överlever omstart.
+                    await RefreshOrderStatisticsAsync (
+                        orderDataAccess,
                         stoppingToken);
 
 
@@ -385,6 +434,14 @@ namespace ITOTShop.Integration
                     }
                 catch (Exception ex)
                     {
+                    // Markerar PLC som frånkopplad i metrics.
+                    _metrics.SetPlcDisconnected ();
+
+
+                    // Registrerar ett kommunikationsfel mot PLC.
+                    _metrics.RecordPlcCommunicationFailure ();
+
+
                     // Ordern ligger kvar som Pending om den ännu
                     // inte har kunnat skickas till PLC:n.
                     _logger.LogWarning (
@@ -437,6 +494,14 @@ namespace ITOTShop.Integration
                     }
                 catch (Exception ex)
                     {
+                    // Markerar PLC som frånkopplad i metrics.
+                    _metrics.SetPlcDisconnected ();
+
+
+                    // Registrerar ett kommunikationsfel mot PLC.
+                    _metrics.RecordPlcCommunicationFailure ();
+
+
                     _logger.LogWarning (
                         "Could not reset PLC. Retry {Attempt}. Error: {ErrorMessage}",
                         resetAttempt,
@@ -483,6 +548,12 @@ namespace ITOTShop.Integration
                         modbusService.ReadProductionState ();
 
 
+                    // Uppdaterar live-metrics även under återställningen.
+                    _metrics.UpdatePlcState (
+                        (int) productionState.Status,
+                        productionState.ProducedQuantity);
+
+
                     // Lyckad kommunikation återställer felräknaren.
                     readAttempt = 0;
 
@@ -509,6 +580,14 @@ namespace ITOTShop.Integration
                     readAttempt++;
 
 
+                    // Markerar PLC som frånkopplad i metrics.
+                    _metrics.SetPlcDisconnected ();
+
+
+                    // Registrerar ett kommunikationsfel mot PLC.
+                    _metrics.RecordPlcCommunicationFailure ();
+
+
                     _logger.LogWarning (
                         "Could not read PLC status during reset. Retry {Attempt}. Error: {ErrorMessage}",
                         readAttempt,
@@ -524,6 +603,65 @@ namespace ITOTShop.Integration
 
 
             throw new OperationCanceledException (stoppingToken);
+            }
+
+
+        // Hämtar permanenta totalsiffror från SQL
+        // och uppdaterar värdena som exponeras till Prometheus.
+        //
+        // Detta gör att Completed Orders, Failed Orders
+        // och Produced Units inte börjar om från 0
+        // när Integration startas om.
+        private async Task RefreshOrderStatisticsAsync (
+            IOrderDataAccess orderDataAccess,
+            CancellationToken stoppingToken )
+            {
+            // Hämtar aktuell statistik direkt från SQL-databasen.
+            var statistics =
+                await orderDataAccess.GetStatisticsAsync (
+                    stoppingToken);
+
+
+            // Uppdaterar metrics med de permanenta
+            // totalsiffrorna från databasen.
+            _metrics.UpdateOrderStatistics (
+                statistics.CompletedOrders,
+                statistics.FailedOrders,
+                statistics.ProducedUnits);
+            }
+
+
+        // Kontrollerar PLC-status även när det inte finns någon Pending-order.
+        //
+        // Detta gör att Grafana kan visa riktig live-status:
+        // Online när OpenPLC går att nå.
+        // Offline när OpenPLC inte går att nå.
+        // ProductionStatus och ProducedQuantity hålls också uppdaterade.
+        private void UpdateIdlePlcMetrics (
+            ModbusService modbusService )
+            {
+            try
+                {
+                // Läser PLC-status trots att ingen order behandlas.
+                var productionState =
+                    modbusService.ReadProductionState ();
+
+
+                // En lyckad läsning betyder att PLC:n är Online.
+                _metrics.UpdatePlcState (
+                    (int) productionState.Status,
+                    productionState.ProducedQuantity);
+                }
+            catch (Exception)
+                {
+                // PLC:n går inte att nå.
+                // Vi markerar endast anslutningen som Offline här.
+                //
+                // Kommunikationsfel räknas inte upp under idle-pollningen
+                // eftersom ett avstängt PLC annars skulle skapa
+                // ett nytt kommunikationsfel var femte sekund.
+                _metrics.SetPlcDisconnected ();
+                }
             }
         }
     }
