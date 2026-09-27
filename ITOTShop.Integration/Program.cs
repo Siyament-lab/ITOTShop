@@ -2,7 +2,7 @@ using ITOTShop.Integration.Data;
 using ITOTShop.Integration.DataAccess;
 using ITOTShop.Integration.Interfaces;
 using ITOTShop.Integration.Services;
-using ITOTShop.Integration.Monitoring;
+using ITOTShop.Integration.Metrics;
 using OpenTelemetry.Metrics;
 using Microsoft.EntityFrameworkCore;
 
