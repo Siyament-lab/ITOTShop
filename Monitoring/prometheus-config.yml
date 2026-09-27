@@ -1,0 +1,11 @@
+global:
+  # Prometheus hämtar nya metrics var 2:e sekund.
+  scrape_interval: 2s
+
+scrape_configs:
+  # Metrics från vårt C# Integration-projekt.
+  - job_name: "itotshop-integration"
+
+    static_configs:
+      - targets:
+          - "localhost:9464"

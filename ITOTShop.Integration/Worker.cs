@@ -69,12 +69,18 @@ namespace ITOTShop.Integration
                                 stoppingToken);
 
 
-                    // Om ingen Pending-order finns väntar Worker
-                    // innan databasen kontrolleras igen.
+                    // Om ingen Pending-order finns kontrolleras ändå
+                    // PLC-status så att Grafana visar aktuell anslutning
+                    // och produktionsstatus även när systemet är Idle.
                     if (order == null)
                         {
+                        UpdateIdlePlcMetrics (
+                            modbusService);
+
+
                         _logger.LogInformation (
                             "No pending orders found.");
+
 
                         await Task.Delay (
                             TimeSpan.FromSeconds (5),
@@ -622,6 +628,40 @@ namespace ITOTShop.Integration
                 statistics.CompletedOrders,
                 statistics.FailedOrders,
                 statistics.ProducedUnits);
+            }
+
+
+        // Kontrollerar PLC-status även när det inte finns någon Pending-order.
+        //
+        // Detta gör att Grafana kan visa riktig live-status:
+        // Online när OpenPLC går att nå.
+        // Offline när OpenPLC inte går att nå.
+        // ProductionStatus och ProducedQuantity hålls också uppdaterade.
+        private void UpdateIdlePlcMetrics (
+            ModbusService modbusService )
+            {
+            try
+                {
+                // Läser PLC-status trots att ingen order behandlas.
+                var productionState =
+                    modbusService.ReadProductionState ();
+
+
+                // En lyckad läsning betyder att PLC:n är Online.
+                _metrics.UpdatePlcState (
+                    (int) productionState.Status,
+                    productionState.ProducedQuantity);
+                }
+            catch (Exception)
+                {
+                // PLC:n går inte att nå.
+                // Vi markerar endast anslutningen som Offline här.
+                //
+                // Kommunikationsfel räknas inte upp under idle-pollningen
+                // eftersom ett avstängt PLC annars skulle skapa
+                // ett nytt kommunikationsfel var femte sekund.
+                _metrics.SetPlcDisconnected ();
+                }
             }
         }
     }

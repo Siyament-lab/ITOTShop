@@ -1,0 +1,23 @@
+services:
+  grafana:
+    image: grafana/grafana:13.2.2
+    container_name: itotshop-grafana
+
+    ports:
+      - "3000:3000"
+
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: Grafana2026!
+
+    volumes:
+      - ./Grafana/Provisioning:/etc/grafana/provisioning:ro
+      - ./Grafana/DashboardFiles:/var/lib/grafana/dashboards:ro
+
+      # Sparar användare, lösenord och Grafanas interna data permanent.
+      - grafana-data:/var/lib/grafana
+
+    restart: unless-stopped
+
+volumes:
+  grafana-data:

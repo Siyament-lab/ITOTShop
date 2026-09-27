@@ -1,0 +1,17 @@
+apiVersion: 1
+
+providers:
+  - name: "ITOTShop Dashboards"
+    orgId: 1
+
+    # Dashboarden placeras i denna Grafana-mapp.
+    folder: "ITOTShop"
+
+    type: file
+
+    # Grafana kontrollerar regelbundet om dashboard-filen ändrats.
+    updateIntervalSeconds: 10
+
+    options:
+      # Den här sökvägen kommer användas inne i Grafana-containern.
+      path: /var/lib/grafana/dashboards
