@@ -8,9 +8,9 @@ namespace ITOTShop.Tests.Integration
     {
     public class OrderDataAccessTests
         {
-        //****Test 1 **** Äldsta Order under behandling
+        //****Test 1 **** Äldsta pending order om inga underbehandling order finns
         [Fact]
-        public async Task Test1_GetNextOrderToProcessAsync_ReturnsOldestPendingOrder ()
+        public async Task Test1_GetNextOrderToProcessAsync_ReturnsOldestPendingOrder_WhenNoProcessingOrderExists ()
             {
             // Arrange
             // Skapar en unik InMemory-databas endast för detta test.
@@ -139,9 +139,9 @@ namespace ITOTShop.Tests.Integration
             // Kontrollerar att UpdatedAt också sattes vid uppdateringen.
             Assert.NotNull (updatedOrder.UpdatedAt);
             }
-        //**** Test 3**** Ignorera beställningar som inte är under behandling
+        //**** Test 3**** Ignorera beställningar som inte är väntande
         [Fact]
-        public async Task Test3_GetNextOrderToProcessAsync_IgnoresNonPendingOrders ()
+        public async Task Test3_GetNextOrderToProcessAsync_IgnoresCompletedOrder_ReturnsPendingOrder ()
             {
             // Arrange
             // Skapar en unik InMemory-databas endast för detta test.
@@ -226,7 +226,7 @@ namespace ITOTShop.Tests.Integration
                 new IntegrationDbContext (options);
 
 
-            // Skapar endast ordrar som inte är Pending.
+            // Skapar endast ordrar som varken är Pending eller processing.
             var completedOrder = new IntegrateOrder
                 {
                 Id = 1,
@@ -268,7 +268,7 @@ namespace ITOTShop.Tests.Integration
 
 
             // Assert
-            // Ingen Pending-order finns och resultatet ska därför vara null.
+            // Ingen Pending/ processing order finns och resultatet ska därför vara null.
             Assert.Null (result);
             }
 
@@ -358,7 +358,7 @@ namespace ITOTShop.Tests.Integration
                 Id = 1,
                 CustomerId = 1,
                 ProductName = "Failed Test",
-                Quantity = 25,
+                Quantity = 25, //PLC gräns max 20 ordrar/ beställning
                 UnitPrice = 100,
                 Status = OrderStatus.Processing,
                 CreatedAt = DateTime.UtcNow
@@ -401,5 +401,6 @@ namespace ITOTShop.Tests.Integration
             // Kontrollerar att UpdatedAt sattes när status ändrades.
             Assert.NotNull (updatedOrder.UpdatedAt);
             }
+
         }
     }
