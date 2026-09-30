@@ -10,7 +10,7 @@ namespace ITOTShop.Tests.Integration
         {
         //****Test 1 **** Äldsta Order under behandling
         [Fact]
-        public async Task Test1_GetNextPendingOrderAsync_ReturnsOldestPendingOrder ()
+        public async Task Test1_GetNextOrderToProcessAsync_ReturnsOldestPendingOrder ()
             {
             // Arrange
             // Skapar en unik InMemory-databas endast för detta test.
@@ -61,7 +61,7 @@ namespace ITOTShop.Tests.Integration
             // Act
             // Hämtar nästa beställning under behandling.
             var result =
-                await orderDataAccess.GetNextPendingOrderAsync ();
+                await orderDataAccess.GetNextOrderToProcessAsync ();
 
 
             // Assert
@@ -141,7 +141,7 @@ namespace ITOTShop.Tests.Integration
             }
         //**** Test 3**** Ignorera beställningar som inte är under behandling
         [Fact]
-        public async Task Test3_GetNextPendingOrderAsync_IgnoresNonPendingOrders ()
+        public async Task Test3_GetNextOrderToProcessAsync_IgnoresNonPendingOrders ()
             {
             // Arrange
             // Skapar en unik InMemory-databas endast för detta test.
@@ -194,7 +194,7 @@ namespace ITOTShop.Tests.Integration
             // Act
             // Försöker hämta nästa order som ska behandlas.
             var result =
-                await orderDataAccess.GetNextPendingOrderAsync ();
+                await orderDataAccess.GetNextOrderToProcessAsync ();
 
 
             // Assert
@@ -211,9 +211,9 @@ namespace ITOTShop.Tests.Integration
                 result.Status);
             }
 
-        //**** Test 4**** Inga pending ordrar
+        //**** Test 4**** Inga behandlingsbara ordrar
         [Fact]
-        public async Task Test4_GetNextPendingOrderAsync_NoPendingOrders_ReturnsNull ()
+        public async Task Test4_GetNextOrderToProcessAsync_NoProcessableOrders_ReturnsNull ()
             {
             // Arrange
             // Skapar en unik InMemory-databas endast för detta test.
@@ -262,9 +262,9 @@ namespace ITOTShop.Tests.Integration
 
 
             // Act
-            // Försöker hämta nästa Pending-order.
+            // Försöker hämta nästa underbehandling-order.
             var result =
-                await orderDataAccess.GetNextPendingOrderAsync ();
+                await orderDataAccess.GetNextOrderToProcessAsync ();
 
 
             // Assert
