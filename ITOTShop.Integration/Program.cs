@@ -1,10 +1,12 @@
 using ITOTShop.Integration.Data;
 using ITOTShop.Integration.DataAccess;
 using ITOTShop.Integration.Interfaces;
-using ITOTShop.Integration.Services;
 using ITOTShop.Integration.Metrics;
-using OpenTelemetry.Metrics;
+using ITOTShop.Integration.Services;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
+using OpenTelemetry.Metrics;
 
 namespace ITOTShop.Integration
     {
@@ -12,30 +14,34 @@ namespace ITOTShop.Integration
         {
         static void Main ( string[] args )
             {
-            // Skapar Worker-applikationen och läser konfiguration från appsettings.json
-            var builder = Host.CreateApplicationBuilder (args);
+            // Skapar applikationen med ASP.NET Core så Kestrel kan exponera /metrics.
+            var builder = WebApplication.CreateBuilder (args);
 
-            // Hämtar connection string till den gemensamma orderdatabasen
+            // Metrics-endpointen lyssnar på alla nätverksinterface på port 9464.
+            // Detta gör att Prometheus i Docker kan nå Integration.
+            builder.WebHost.UseUrls ("http://0.0.0.0:9464");
+
+            // Hämtar connection string till den gemensamma orderdatabasen.
             var connectionString =
                 builder.Configuration.GetConnectionString ("DefaultConnection");
 
-            // Registrerar IntegrationDbContext så integrationsprogrammet kan läsa Orders-tabellen
+            // Registrerar IntegrationDbContext så integrationsprogrammet kan läsa Orders-tabellen.
             builder.Services.AddDbContext<IntegrationDbContext> (options =>
                 options.UseSqlServer (connectionString));
 
-            // Registrerar ===OrderDataAccess==== som implementerar IOrderDataAccess
+            // Registrerar OrderDataAccess som implementerar IOrderDataAccess.
             builder.Services.AddScoped<IOrderDataAccess, OrderDataAccess> ();
 
-            // Registrerar Worker som kör integrationsprocessen i bakgrunden
+            // Registrerar Worker som kör integrationsprocessen i bakgrunden.
             builder.Services.AddHostedService<Worker> ();
 
-            //Registrerar =========Modbusservice============== 
+            // Registrerar ModbusService.
             builder.Services.AddScoped<ModbusService> ();
 
-            //Registerar vår Metrics-service
+            // Registrerar vår Metrics-service.
             builder.Services.AddSingleton<IntegrationMetrics> ();
 
-            // Konfigurerar OpenTelemetry och exponerar metrics för Prometheus.
+            // Konfigurerar OpenTelemetry och Prometheus-exportern.
             builder.Services
                 .AddOpenTelemetry ()
                 .WithMetrics (metrics =>
@@ -44,17 +50,19 @@ namespace ITOTShop.Integration
                         // Lyssnar på alla värden som IntegrationMetrics skapar.
                         .AddMeter (IntegrationMetrics.MeterName)
 
-                        .AddPrometheusHttpListener (options =>
-                        {
-                            // får tillgång till metrics lokalt på datorn
-                            options.Host = "localhost";
-                            options.Port = 9464;
-                        });
+                        // Registrerar Prometheus-exportern.
+                        .AddPrometheusExporter ();
                 });
 
-            // Bygger och startar Worker Service
-            var host = builder.Build ();
-            host.Run ();
+            // Bygger applikationen.
+            var app = builder.Build ();
+
+            // Exponerar metrics på:
+            // http://localhost:9464/metrics
+            app.MapPrometheusScrapingEndpoint ();
+
+            // Startar både Worker och metrics-endpointen.
+            app.Run ();
             }
         }
     }

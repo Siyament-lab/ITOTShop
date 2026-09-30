@@ -6,6 +6,8 @@ services:
     # Prometheus använder host-nätverket för att nå Integration på localhost:9464.
     network_mode: host
 
+    ports:
+    - "9090:9090"
     volumes:
       # Läser Prometheus-konfigurationen från projektet.
       - ./prometheus-config.yml:/etc/prometheus/prometheus.yml:ro

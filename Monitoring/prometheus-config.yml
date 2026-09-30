@@ -1,10 +1,13 @@
 global:
-  # Prometheus hämtar nya metrics var 2:e sekund.
   scrape_interval: 2s
 
 scrape_configs:
-  # Metrics från vårt C# Integration-projekt.
   - job_name: "itotshop-integration"
+
+    scrape_protocols:
+      - PrometheusText0.0.4
+
+    fallback_scrape_protocol: PrometheusText0.0.4
 
     static_configs:
       - targets:

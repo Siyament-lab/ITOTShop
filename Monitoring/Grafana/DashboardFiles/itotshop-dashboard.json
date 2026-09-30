@@ -47,10 +47,10 @@
         }
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 0
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 18
       },
       "id": 1,
       "options": {
@@ -131,9 +131,9 @@
         }
       },
       "gridPos": {
-        "h": 20,
+        "h": 6,
         "w": 12,
-        "x": 12,
+        "x": 0,
         "y": 0
       },
       "id": 4,
@@ -161,10 +161,11 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "editorMode": "builder",
-          "expr": "itotshop_plc_connected",
+          "editorMode": "code",
+          "expr": "(max(itotshop_plc_connected) or vector(0)) * (max(up{job=\"itotshop-integration\"}) or vector(0))",
+          "instant": true,
           "legendFormat": "__auto",
-          "range": true,
+          "range": false,
           "refId": "A"
         }
       ],
@@ -198,10 +199,10 @@
         }
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 8
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 18
       },
       "id": 2,
       "options": {
@@ -265,10 +266,10 @@
         }
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 6,
+        "w": 8,
         "x": 0,
-        "y": 16
+        "y": 18
       },
       "id": 3,
       "options": {
@@ -359,10 +360,10 @@
         }
       },
       "gridPos": {
-        "h": 20,
+        "h": 6,
         "w": 12,
         "x": 12,
-        "y": 20
+        "y": 0
       },
       "id": 5,
       "options": {
@@ -389,10 +390,11 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "editorMode": "builder",
-          "expr": "itotshop_plc_production_status",
+          "editorMode": "code",
+          "expr": "max(itotshop_plc_production_status) and on() (max(itotshop_plc_connected) == 1) and on() (max(up{job=\"itotshop-integration\"}) == 1)",
+          "instant": true,
           "legendFormat": "__auto",
-          "range": true,
+          "range": false,
           "refId": "A"
         }
       ],
@@ -465,10 +467,10 @@
         }
       },
       "gridPos": {
-        "h": 20,
-        "w": 12,
-        "x": 12,
-        "y": 40
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 6
       },
       "id": 6,
       "options": {

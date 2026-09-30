@@ -11,6 +11,8 @@ providers:
 
     # Grafana kontrollerar regelbundet om dashboard-filen ändrats.
     updateIntervalSeconds: 10
+    #Tillåter layout och andra ändringar vi gör i Grafana
+    allowUIUUpdates: true
 
     options:
       # Den här sökvägen kommer användas inne i Grafana-containern.
