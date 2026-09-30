@@ -65,7 +65,7 @@ namespace ITOTShop.Integration
                     // Hämtar endast EN Pending-order åt gången.
                     var order =
                         await orderDataAccess
-                            .GetNextPendingOrderAsync (
+                            .GetNextOrderToProcessAsync (
                                 stoppingToken);
 
 

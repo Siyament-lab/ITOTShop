@@ -23,7 +23,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "ffyszhzz4rke8c"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -47,10 +47,10 @@
         }
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 0
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 18
       },
       "id": 1,
       "options": {
@@ -75,7 +75,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "ffyszhzz4rke8c"
+            "uid": "prometheus"
           },
           "editorMode": "builder",
           "expr": "itotshop_orders_completed",
@@ -90,7 +90,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "ffyszhzz4rke8c"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -131,9 +131,9 @@
         }
       },
       "gridPos": {
-        "h": 20,
+        "h": 6,
         "w": 12,
-        "x": 12,
+        "x": 0,
         "y": 0
       },
       "id": 4,
@@ -159,12 +159,13 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "ffyszhzz4rke8c"
+            "uid": "prometheus"
           },
-          "editorMode": "builder",
-          "expr": "itotshop_plc_connected",
+          "editorMode": "code",
+          "expr": "(max(itotshop_plc_connected) or vector(0)) * (max(up{job=\"itotshop-integration\"}) or vector(0))",
+          "instant": true,
           "legendFormat": "__auto",
-          "range": true,
+          "range": false,
           "refId": "A"
         }
       ],
@@ -174,7 +175,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "ffyszhzz4rke8c"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -198,10 +199,10 @@
         }
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 8
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 18
       },
       "id": 2,
       "options": {
@@ -226,7 +227,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "ffyszhzz4rke8c"
+            "uid": "prometheus"
           },
           "editorMode": "builder",
           "expr": "itotshop_orders_failed",
@@ -241,7 +242,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "ffyszhzz4rke8c"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -265,10 +266,10 @@
         }
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 6,
+        "w": 8,
         "x": 0,
-        "y": 16
+        "y": 18
       },
       "id": 3,
       "options": {
@@ -293,7 +294,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "ffyszhzz4rke8c"
+            "uid": "prometheus"
           },
           "editorMode": "builder",
           "expr": "itotshop_units_produced",
@@ -308,7 +309,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "ffyszhzz4rke8c"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -359,10 +360,10 @@
         }
       },
       "gridPos": {
-        "h": 20,
+        "h": 6,
         "w": 12,
         "x": 12,
-        "y": 20
+        "y": 0
       },
       "id": 5,
       "options": {
@@ -387,12 +388,13 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "ffyszhzz4rke8c"
+            "uid": "prometheus"
           },
-          "editorMode": "builder",
-          "expr": "itotshop_plc_production_status",
+          "editorMode": "code",
+          "expr": "max(itotshop_plc_production_status) and on() (max(itotshop_plc_connected) == 1) and on() (max(up{job=\"itotshop-integration\"}) == 1)",
+          "instant": true,
           "legendFormat": "__auto",
-          "range": true,
+          "range": false,
           "refId": "A"
         }
       ],
@@ -402,7 +404,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "ffyszhzz4rke8c"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -465,10 +467,10 @@
         }
       },
       "gridPos": {
-        "h": 20,
-        "w": 12,
-        "x": 12,
-        "y": 40
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 6
       },
       "id": 6,
       "options": {
@@ -489,7 +491,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "ffyszhzz4rke8c"
+            "uid": "prometheus"
           },
           "editorMode": "builder",
           "expr": "itotshop_plc_produced_quantity",
@@ -524,7 +526,7 @@
     ]
   },
   "timezone": "browser",
-  "title": "ITOPshop",
+  "title": "ITOTshop",
   "version": 1,
   "uid": "advc5ll",
   "id": 928615226134528

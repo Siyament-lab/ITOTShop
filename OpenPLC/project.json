@@ -34,6 +34,8 @@
           "RequestedQuantity",
           "ProductionStatus",
           "ProducedQuantity",
+          "FaultCode",
+          "StartProduction",
           "ResetProduction",
           "ProductionComplete",
           "ProductionFault",
