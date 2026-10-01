@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Docs/">
+    <File Path="Docs/ITOTShop.Rapport.pdf" />
+  </Folder>
   <Folder Name="/Monitoring/">
     <File Path="Monitoring/docker-compose.yml" />
     <File Path="Monitoring/prometheus-config.yml" />
@@ -13,6 +16,9 @@
   </Folder>
   <Folder Name="/Monitoring/Grafana/Provisioning/Datasources/">
     <File Path="Monitoring/Grafana/Provisioning/Datasources/grafana-prometheus-datasource.yml" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="README.md" />
   </Folder>
   <Project Path="ITOTShop.Console/ITOTShop.Console.csproj" Id="50fa95e3-fc3b-4b36-86b0-9b55351633ca" />
   <Project Path="ITOTShop.Integration/ITOTShop.Integration.csproj" Id="1f00e944-7934-4459-867b-c6436d849d59" />
