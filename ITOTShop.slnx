@@ -1,5 +1,7 @@
 <Solution>
-  <Folder Name="/Docs/" />
+  <Folder Name="/Docs/">
+    <File Path="Docs/ITOTShop.Rapport.pdf" />
+  </Folder>
   <Folder Name="/Monitoring/">
     <File Path="Monitoring/docker-compose.yml" />
     <File Path="Monitoring/prometheus-config.yml" />

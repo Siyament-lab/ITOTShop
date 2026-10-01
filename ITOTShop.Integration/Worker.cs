@@ -62,7 +62,7 @@ namespace ITOTShop.Integration
                         stoppingToken);
 
 
-                    // Hämtar endast EN Pending-order åt gången.
+                    // Hämtar endast EN order åt gången för hantering
                     var order =
                         await orderDataAccess
                             .GetNextOrderToProcessAsync (
@@ -81,7 +81,7 @@ namespace ITOTShop.Integration
                         _logger.LogInformation (
                             "No pending orders found.");
 
-
+                        //Fördröjning för nästa kontroll
                         await Task.Delay (
                             TimeSpan.FromSeconds (5),
                             stoppingToken);
@@ -134,7 +134,6 @@ namespace ITOTShop.Integration
 
         // Behandlar en order från att den hämtas från SQL
         // tills PLC:n rapporterar Completed eller ett riktigt Fault.
-        //
         // Kommunikationsproblem gör INTE ordern Failed.
         // Integration väntar i stället tills PLC:n fungerar igen.
         private async Task ProcessOrderAsync (
@@ -263,7 +262,6 @@ namespace ITOTShop.Integration
                 // Om kommunikationen har varit nere och PLC:n efter återkomst
                 // står i Idle betyder det i vår simulator att PLC Runtime
                 // har tappat den pågående produktionen.
-                //
                 // Samma order skickas då på nytt.
                 if (communicationWasLost &&
                     productionState.Status == ProductionStatus.Idle &&
@@ -422,8 +420,6 @@ namespace ITOTShop.Integration
                             "PLC connection restored. Order {OrderId} sent successfully.",
                             order.Id);
                         }
-
-
                     return;
                     }
                 catch (OperationCanceledException)

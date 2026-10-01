@@ -9,7 +9,6 @@ namespace ITOTShop.Integration.Enums
         Pending =1,
         Processing = 2,
         Completed = 3,
-        Failed = 4,
-        Canceled = 5
+        Failed = 4
         }
     }
