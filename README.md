@@ -81,7 +81,6 @@ Pending
 Processing
 Completed
 Failed
-Cancelled
 ```
 
 Om en order redan står som `Processing` när integrationsprogrammet startas igen hämtas den före nya `Pending`-ordrar. Detta minskar risken att en order blir kvar i ett mellanläge efter exempelvis ett avbrott.
@@ -143,17 +142,6 @@ Databasen heter:
 ITOTShopDb
 ```
 
-Databasen används gemensamt av orderhanteringen och integrationsprogrammet.
-
-Den innehåller bland annat information om:
-
-- användare
-- ordrar
-- orderstatus
-- skapad och uppdaterad tid
-
-`ITOTShop.Console` ansvarar för att skapa och läsa orderdata från IT-sidan medan `ITOTShop.Integration` läser och uppdaterar orderstatus under produktionsflödet.
-
 ## Tekniker
 
 Projektet är byggt med:
@@ -164,7 +152,7 @@ Projektet är byggt med:
 - Entity Framework Core
 - SQL Server
 - NModbus
-- OpenPLC
+- OpenPLC (Runtime & editor)
 - OpenTelemetry
 - Prometheus
 - Grafana
@@ -230,13 +218,6 @@ Grafana-dashboarden visar bland annat:
 - Completed Orders
 - Failed Orders
 *
-Produktionsstatus kan exempelvis gå:
-
-```text
-Idle -> Processing -> Completed -> Idle
-```
-
-Om PLC:n eller integrationsprogrammet stängs av uppdateras dashboarden efter några sekunder och visar korrekt anslutningsstatus.
 
 ## Starta projektet
 
@@ -280,24 +261,6 @@ En order kan därefter skapas i Console-applikationen.
 
 Integrationsprogrammet hämtar ordern automatiskt från `ITOTShopDb` och skickar den vidare till PLC:n.
 
-## Testat flöde
-
-Följande flöde har verifierats:
-
-```text
-1. Användaren skapar en order
-2. Ordern sparas som Pending i ITOTShopDb
-3. Integration hämtar ordern
-4. Status ändras till Processing
-5. OrderId och Quantity skickas till PLC
-6. PLC startar produktionen
-7. Producerad kvantitet rapporteras tillbaka
-8. Ordern ändras till Completed eller Failed
-9. Grafana uppdaterar produktionsstatistiken
-```
-
-Jag har även testat att PLC:n är avstängd samt att integrationsprogrammet stoppas och startas igen för att kontrollera att systemet inte visar felaktig Online-status och att pågående ordrar kan återupptas.
-
 ## Projektstruktur
 
 Jag har försökt hålla projekten uppdelade efter ansvar, exempelvis:
@@ -318,5 +281,3 @@ Syftet är att undvika att databasåtkomst, affärslogik och kommunikation bland
 ## Versionshantering
 
 Projektet versionshanteras med Git och GitHub.
-
-Arbetet har delats upp i olika feature-, refactor- och documentation-brancher för att hålla större förändringar separerade innan de förs in i huvudbranchen.
